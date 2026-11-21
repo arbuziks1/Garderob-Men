@@ -1,0 +1,178 @@
+import { useState, type FormEvent } from 'react';
+import type { CartItem, DeliveryMethod, Order, PaymentMethod } from '../../types';
+import { formatPrice } from '../../utils/format';
+import { storage } from '../../services/storage';
+
+interface CheckoutFormProps {
+  items: CartItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  promoCode?: string;
+  onBack: () => void;
+  onComplete: (order: Order) => void;
+}
+
+const DELIVERY_OPTIONS: DeliveryMethod[] = ['Самовывоз из магазина', 'Доставка по Усть-Каменогорску'];
+const PAYMENT_OPTIONS: PaymentMethod[] = ['Kaspi QR', 'Перевод', 'Наличными при получении'];
+
+export default function CheckoutForm({
+  items,
+  subtotal,
+  discount,
+  total,
+  promoCode,
+  onBack,
+  onComplete,
+}: CheckoutFormProps) {
+  const [customerName, setCustomerName] = useState('');
+  const [phone, setPhone] = useState('+7');
+  const [delivery, setDelivery] = useState<DeliveryMethod>(DELIVERY_OPTIONS[0]);
+  const [payment, setPayment] = useState<PaymentMethod>(PAYMENT_OPTIONS[0]);
+  const [comment, setComment] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    if (customerName.trim().length < 2) {
+      setError('Укажите имя');
+      return;
+    }
+    if (!/^\+7\d{10}$/.test(phone.replace(/[\s()-]/g, ''))) {
+      setError('Укажите телефон в формате +7XXXXXXXXXX');
+      return;
+    }
+
+    const order: Order = {
+      id: `o${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      customerName: customerName.trim(),
+      phone: phone.replace(/[\s()-]/g, ''),
+      delivery,
+      payment,
+      items: items.map((i) => ({
+        productId: i.productId,
+        title: i.title,
+        colorName: i.colorName,
+        size: i.size,
+        price: i.price,
+        quantity: i.quantity,
+      })),
+      subtotal,
+      discount,
+      promoCode,
+      total,
+      status: 'Новый',
+      comment: comment.trim() || undefined,
+    };
+
+    storage.addOrder(order);
+    onComplete(order);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-y-auto px-5 py-4">
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-graphite-600">Имя</label>
+          <input
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="Как к вам обращаться"
+            className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-graphite-950 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-graphite-600">Телефон</label>
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+77011234567"
+            className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-graphite-950 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-graphite-600">Способ получения</label>
+          <div className="flex flex-col gap-2">
+            {DELIVERY_OPTIONS.map((opt) => (
+              <label
+                key={opt}
+                className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                  delivery === opt ? 'border-graphite-950 bg-stone-50' : 'border-stone-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="delivery"
+                  checked={delivery === opt}
+                  onChange={() => setDelivery(opt)}
+                  className="accent-graphite-950"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-graphite-600">Оплата</label>
+          <div className="flex flex-col gap-2">
+            {PAYMENT_OPTIONS.map((opt) => (
+              <label
+                key={opt}
+                className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                  payment === opt ? 'border-graphite-950 bg-stone-50' : 'border-stone-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={payment === opt}
+                  onChange={() => setPayment(opt)}
+                  className="accent-graphite-950"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-graphite-600">Комментарий (необязательно)</label>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={2}
+            className="w-full resize-none rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-graphite-950 focus:outline-none"
+          />
+        </div>
+
+        {error && <p className="text-sm text-ember">{error}</p>}
+
+        <div className="flex justify-between text-base font-semibold text-graphite-950">
+          <span>Итого к оплате</span>
+          <span>{formatPrice(total)}</span>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-full border border-stone-300 px-5 py-3 text-sm font-medium text-graphite-800"
+          >
+            Назад
+          </button>
+          <button
+            type="submit"
+            className="flex-1 rounded-full bg-ember py-3 font-display text-sm uppercase tracking-wider text-white hover:bg-ember-light"
+          >
+            Подтвердить заказ
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
