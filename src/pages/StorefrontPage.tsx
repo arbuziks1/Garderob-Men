@@ -1,13 +1,16 @@
 import { useMemo, useRef, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { Category, Product } from '../types';
 import { isInStock, priceRange } from '../types';
 import { useProducts, useSettings } from '../hooks/useStore';
 import Header from '../components/storefront/Header';
 import HeroBanner from '../components/storefront/HeroBanner';
 import CatalogFilters, { type FilterState } from '../components/storefront/CatalogFilters';
+import MobileCategoryBar from '../components/storefront/MobileCategoryBar';
 import ProductGrid from '../components/storefront/ProductGrid';
 import ProductModal from '../components/storefront/ProductModal';
 import CartDrawer from '../components/storefront/CartDrawer';
+import CartToast from '../components/storefront/CartToast';
 import Footer from '../components/storefront/Footer';
 
 interface StorefrontPageProps {
@@ -50,7 +53,7 @@ export default function StorefrontPage({ onOpenAdmin }: StorefrontPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
+    <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-paper">
       <Header
         settings={settings}
         activeCategory={activeCategory}
@@ -61,15 +64,29 @@ export default function StorefrontPage({ onOpenAdmin }: StorefrontPageProps) {
       />
       <HeroBanner settings={settings} onShopClick={scrollToCatalog} />
 
-      <main ref={catalogRef} className="mx-auto flex w-full max-w-7xl flex-1 scroll-mt-20 gap-6 px-4 py-8 sm:px-6">
+      <MobileCategoryBar
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+        filters={filters}
+        onFiltersChange={setFilters}
+        priceCeiling={priceMax || 200000}
+      />
+
+      <main
+        ref={catalogRef}
+        className="mx-auto flex w-full max-w-7xl flex-1 scroll-mt-20 flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row"
+      >
         <CatalogFilters filters={filters} onChange={setFilters} priceCeiling={priceMax || 200000} />
         <ProductGrid products={filteredProducts} onSelect={setSelectedProduct} />
       </main>
 
       <Footer settings={settings} onOpenAdmin={onOpenAdmin} />
 
-      {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+      <AnimatePresence>
+        {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+      </AnimatePresence>
       <CartDrawer />
+      <CartToast />
     </div>
   );
 }

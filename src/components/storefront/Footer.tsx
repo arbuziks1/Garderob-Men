@@ -12,8 +12,8 @@ export default function Footer({ settings, onOpenAdmin }: FooterProps) {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
-            <p className="font-display text-lg font-bold tracking-wide text-paper">
-              GARDEROB <span className="text-ember-light">MEN</span>
+            <p className="font-display text-lg tracking-wide text-paper">
+              <span className="font-bold">GARDEROB</span> <span className="font-normal text-stone-300">MEN</span>
             </p>
             <p className="mt-2 text-sm">Мужская одежда в Усть-Каменогорске.</p>
           </div>
@@ -53,7 +53,7 @@ export default function Footer({ settings, onOpenAdmin }: FooterProps) {
             </a>
             <button
               onClick={onOpenAdmin}
-              className="mt-4 rounded-sm border border-graphite-700 px-3 py-1.5 text-[11px] uppercase tracking-wider text-stone-500 hover:border-ember-light hover:text-ember-light"
+              className="mt-4 rounded-sm border border-graphite-700 px-3 py-1.5 text-[11px] uppercase tracking-wider text-stone-500 hover:border-stone-300 hover:text-stone-100"
             >
               Админ-панель
             </button>

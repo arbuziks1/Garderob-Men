@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, MapPin, Menu, Search, ShoppingBag, X } from 'lucide-react';
 import type { Category } from '../../types';
 import { CATEGORIES } from '../../types';
@@ -36,8 +37,8 @@ export default function Header({
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
 
-        <a href="#top" className="font-display text-xl font-semibold tracking-[0.08em] sm:text-2xl">
-          GARDEROB <span className="text-ember-light">MEN</span>
+        <a href="#top" className="font-display text-xl tracking-[0.08em] sm:text-2xl">
+          <span className="font-semibold">GARDEROB</span> <span className="font-normal text-stone-300">MEN</span>
         </a>
 
         <nav className="ml-8 hidden flex-1 items-center gap-6 lg:flex">
@@ -45,7 +46,7 @@ export default function Header({
             onClick={() => onCategoryChange('Все')}
             className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
               activeCategory === 'Все' || activeCategory === null
-                ? 'border-ember-light text-ember-light'
+                ? 'border-paper text-paper'
                 : 'border-transparent text-stone-400 hover:text-stone-100'
             }`}
           >
@@ -57,7 +58,7 @@ export default function Header({
               onClick={() => onCategoryChange(cat)}
               className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
                 activeCategory === cat
-                  ? 'border-ember-light text-ember-light'
+                  ? 'border-paper text-paper'
                   : 'border-transparent text-stone-400 hover:text-stone-100'
               }`}
             >
@@ -73,7 +74,7 @@ export default function Header({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Поиск товаров..."
-              className="w-40 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 pl-9 pr-3 text-sm text-paper placeholder:text-stone-500 focus:w-56 focus:border-ember-light focus:outline-none transition-all md:w-56"
+              className="w-40 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 pl-9 pr-3 text-sm text-paper placeholder:text-stone-500 focus:w-56 focus:border-stone-400 focus:outline-none transition-all md:w-56"
             />
           </div>
 
@@ -104,16 +105,25 @@ export default function Header({
             aria-label="Корзина"
           >
             <ShoppingBag size={20} />
-            {itemCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ember px-1 text-[10px] font-bold text-white">
-                {itemCount}
-              </span>
-            )}
+            <AnimatePresence>
+              {itemCount > 0 && (
+                <motion.span
+                  key={itemCount}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.5, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-paper px-1 text-[10px] font-bold text-graphite-950"
+                >
+                  {itemCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
 
           <button
             onClick={onOpenAdmin}
-            className="hidden shrink-0 whitespace-nowrap rounded-sm border border-graphite-700 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-stone-400 hover:border-ember-light hover:text-ember-light md:block"
+            className="hidden shrink-0 whitespace-nowrap rounded-sm border border-graphite-700 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-stone-400 hover:border-stone-300 hover:text-stone-100 md:block"
           >
             Админ-панель
           </button>
@@ -125,7 +135,7 @@ export default function Header({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Поиск товаров..."
-          className="w-full shrink-0 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 px-4 text-sm text-paper placeholder:text-stone-500 focus:border-ember-light focus:outline-none sm:hidden"
+          className="w-full shrink-0 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 px-4 text-sm text-paper placeholder:text-stone-500 focus:border-stone-400 focus:outline-none sm:hidden"
         />
       </div>
 
@@ -138,7 +148,7 @@ export default function Header({
             }}
             className={`border-l-2 px-3 py-2 text-left text-sm font-medium uppercase tracking-wide ${
               activeCategory === 'Все' || activeCategory === null
-                ? 'border-ember-light text-ember-light'
+                ? 'border-paper text-paper'
                 : 'border-transparent text-stone-300'
             }`}
           >
@@ -152,7 +162,7 @@ export default function Header({
                 setMobileMenuOpen(false);
               }}
               className={`border-l-2 px-3 py-2 text-left text-sm font-medium uppercase tracking-wide ${
-                activeCategory === cat ? 'border-ember-light text-ember-light' : 'border-transparent text-stone-300'
+                activeCategory === cat ? 'border-paper text-paper' : 'border-transparent text-stone-300'
               }`}
             >
               {cat}

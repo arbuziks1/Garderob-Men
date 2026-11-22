@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { usePromoCodes } from '../../hooks/useStore';
 import { formatPrice } from '../../utils/format';
+import { EASE } from '../../utils/motion';
 import SafeImage from '../shared/SafeImage';
 import CheckoutForm from './CheckoutForm';
 import OrderSuccess from './OrderSuccess';
@@ -18,8 +20,6 @@ export default function CartDrawer() {
   const [promoError, setPromoError] = useState('');
   const [step, setStep] = useState<Step>('cart');
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
-
-  if (!isDrawerOpen) return null;
 
   const discount = appliedPromo ? Math.round((subtotal * appliedPromo.percent) / 100) : 0;
   const total = subtotal - discount;
@@ -49,9 +49,24 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative flex h-full w-full max-w-md flex-col bg-white">
+    <AnimatePresence>
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="absolute inset-0 bg-black/50"
+            onClick={handleClose}
+          />
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ duration: 0.4, ease: EASE }}
+            className="relative flex h-full w-full max-w-md flex-col bg-white"
+          >
         <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
           <h2 className="font-display text-lg font-semibold text-graphite-950">
             {step === 'cart' && `Корзина (${itemCount})`}
@@ -184,7 +199,9 @@ export default function CartDrawer() {
             )}
           </>
         )}
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

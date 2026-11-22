@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { Product, Size } from '../../types';
 import { SIZES } from '../../types';
 import { formatPrice } from '../../utils/format';
+import { EASE } from '../../utils/motion';
 import { useCart } from '../../contexts/CartContext';
 import SafeImage from '../shared/SafeImage';
 
@@ -16,7 +18,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [imgIdx, setImgIdx] = useState(0);
   const [size, setSize] = useState<Size | null>(null);
   const [added, setAdded] = useState(false);
-  const { addItem, openDrawer } = useCart();
+  const { addItem } = useCart();
 
   const color = product.colors[colorIdx];
   const image = color.images[imgIdx] ?? color.images[0];
@@ -45,13 +47,25 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
       maxStock: stockForSize,
     });
     setAdded(true);
-    setTimeout(() => openDrawer(), 150);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-y-auto rounded-t-2xl bg-white sm:flex-row sm:rounded-2xl">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, ease: EASE }}
+        className="absolute inset-0 bg-black/60"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 24 }}
+        transition={{ duration: 0.35, ease: EASE }}
+        className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-y-auto rounded-t-sm bg-white sm:flex-row sm:rounded-sm"
+      >
         <button
           onClick={onClose}
           className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-graphite-950 shadow sm:right-4 sm:top-4"
@@ -168,7 +182,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
             {added ? 'Добавлено в корзину ✓' : 'Добавить в корзину'}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -23,6 +23,7 @@ interface CartContextValue {
   isDrawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
+  toast: string | null;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -30,6 +31,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadCart);
   const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -38,6 +40,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // ignore storage errors (private browsing, quota)
     }
   }, [items]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const addItem = (newItem: CartItem) => {
     setItems((prev) => {
@@ -50,7 +58,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       next[idx] = { ...next[idx], quantity: combinedQty };
       return next;
     });
-    setDrawerOpen(true);
+    setToast(`Добавлено в корзину — Размер ${newItem.size}`);
   };
 
   const updateQuantity = (productId: string, colorId: string, size: string, quantity: number) => {
@@ -87,6 +95,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     isDrawerOpen,
     openDrawer: () => setDrawerOpen(true),
     closeDrawer: () => setDrawerOpen(false),
+    toast,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

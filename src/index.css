@@ -5,7 +5,7 @@
   --font-display: "Oswald", "Arial Narrow", sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
 
-  --color-ink: #0b0b0c;
+  --color-ink: #111111;
   --color-graphite-950: #111113;
   --color-graphite-900: #18181b;
   --color-graphite-800: #27272a;
@@ -14,12 +14,18 @@
   --color-graphite-500: #71717a;
   --color-stone-400: #a8a29e;
   --color-stone-300: #d6d3d1;
-  --color-stone-200: #e7e5e4;
+  --color-stone-200: #e5e3dd;
   --color-stone-100: #f1efec;
-  --color-paper: #faf9f7;
-  --color-ember: #8a6a35;
-  --color-ember-light: #ad8c52;
-  --color-ember-dark: #6b511f;
+  --color-paper: #f7f6f2;
+  --color-ember: #2c3028;
+  --color-ember-light: #454c3d;
+  --color-ember-dark: #1b1e18;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 html {
@@ -36,6 +42,14 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 ::-webkit-scrollbar {

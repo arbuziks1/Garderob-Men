@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import type { Product } from '../../types';
 import ProductCard from './ProductCard';
 
@@ -17,10 +18,12 @@ export default function ProductGrid({ products, onSelect }: ProductGridProps) {
   }
 
   return (
-    <div className="grid flex-1 grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} onClick={() => onSelect(product)} />
-      ))}
-    </div>
+    <motion.div layout className="grid flex-1 grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+      <AnimatePresence initial={false}>
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} onClick={() => onSelect(product)} />
+        ))}
+      </AnimatePresence>
+    </motion.div>
   );
 }
