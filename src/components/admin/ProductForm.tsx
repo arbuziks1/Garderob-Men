@@ -3,7 +3,7 @@ import { Plus, Trash2, X } from 'lucide-react';
 import type { ColorVariant, Fit, Product, Size, StockBySize } from '../../types';
 import { CATEGORIES, FITS, SIZES } from '../../types';
 import { storage } from '../../services/storage';
-import SafeImage from '../shared/SafeImage';
+import ImageField from './ImageField';
 
 interface ProductFormProps {
   product: Product | null;
@@ -102,7 +102,13 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
       ...form,
       colors: form.colors.map((c) => ({ ...c, images: c.images.filter((img) => img.trim()) })),
     };
-    storage.upsertProduct(cleaned);
+    const saved = storage.upsertProduct(cleaned);
+    if (!saved) {
+      setError(
+        'Не удалось сохранить: переполнено хранилище браузера. Удалите несколько изображений или используйте ссылки вместо загрузки файлов.'
+      );
+      return;
+    }
     onClose();
   };
 
@@ -238,27 +244,15 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
                       )}
                     </div>
 
-                    <p className="mb-1.5 text-xs font-medium text-graphite-500">Ссылки на изображения</p>
+                    <p className="mb-1.5 text-xs font-medium text-graphite-500">Изображения</p>
                     <div className="mb-3 flex flex-col gap-2">
                       {color.images.map((img, imgIdx) => (
-                        <div key={imgIdx} className="flex items-center gap-2">
-                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-stone-100">
-                            <SafeImage src={img} alt="" className="h-full w-full object-cover" />
-                          </div>
-                          <input
-                            value={img}
-                            onChange={(e) => updateImage(colorIdx, imgIdx, e.target.value)}
-                            placeholder="https://..."
-                            className="input flex-1"
-                          />
-                          <button
-                            onClick={() => removeImage(colorIdx, imgIdx)}
-                            type="button"
-                            className="shrink-0 rounded-md p-2 text-graphite-400 hover:bg-stone-100"
-                          >
-                            <X size={15} />
-                          </button>
-                        </div>
+                        <ImageField
+                          key={imgIdx}
+                          value={img}
+                          onChange={(value) => updateImage(colorIdx, imgIdx, value)}
+                          onRemove={() => removeImage(colorIdx, imgIdx)}
+                        />
                       ))}
                       <button
                         onClick={() => addImage(colorIdx)}

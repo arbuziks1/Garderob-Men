@@ -24,11 +24,13 @@ function read<T>(key: string, fallback: T): T {
   }
 }
 
-function write<T>(key: string, value: T): void {
+function write<T>(key: string, value: T): boolean {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
-    // storage unavailable (private mode, quota) — fail silently, in-memory state still works for this session
+    // storage unavailable (private mode) or quota exceeded (e.g. too many/too large uploaded images)
+    return false;
   }
 }
 
@@ -51,16 +53,17 @@ export const storage = {
   getProducts(): Product[] {
     return read(KEYS.products, SEED_PRODUCTS);
   },
-  saveProducts(products: Product[]): void {
-    write(KEYS.products, products);
+  saveProducts(products: Product[]): boolean {
+    const ok = write(KEYS.products, products);
     notifyChange();
+    return ok;
   },
-  upsertProduct(product: Product): void {
+  upsertProduct(product: Product): boolean {
     const products = storage.getProducts();
     const idx = products.findIndex((p) => p.id === product.id);
     if (idx === -1) products.push(product);
     else products[idx] = product;
-    storage.saveProducts(products);
+    return storage.saveProducts(products);
   },
   deleteProduct(id: string): void {
     storage.saveProducts(storage.getProducts().filter((p) => p.id !== id));
@@ -86,9 +89,10 @@ export const storage = {
   getSettings(): StoreSettings {
     return read(KEYS.settings, DEFAULT_STORE_SETTINGS);
   },
-  saveSettings(settings: StoreSettings): void {
-    write(KEYS.settings, settings);
+  saveSettings(settings: StoreSettings): boolean {
+    const ok = write(KEYS.settings, settings);
     notifyChange();
+    return ok;
   },
 
   getPromoCodes(): PromoCode[] {

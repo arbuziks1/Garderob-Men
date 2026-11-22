@@ -4,17 +4,26 @@ import type { PromoCode, StoreSettings, WorkingHours } from '../../types';
 import { useSettings, usePromoCodes } from '../../hooks/useStore';
 import { storage } from '../../services/storage';
 import SafeImage from '../shared/SafeImage';
+import ImageField from './ImageField';
 
 export default function StoreSettingsManager() {
   const [settings] = useSettings();
   const [promoCodes] = usePromoCodes();
   const [form, setForm] = useState<StoreSettings>(settings);
   const [savedTick, setSavedTick] = useState(0);
+  const [saveError, setSaveError] = useState('');
 
   const save = (next: StoreSettings) => {
     setForm(next);
-    storage.saveSettings(next);
-    setSavedTick((t) => t + 1);
+    const ok = storage.saveSettings(next);
+    if (ok) {
+      setSaveError('');
+      setSavedTick((t) => t + 1);
+    } else {
+      setSaveError(
+        'Не удалось сохранить: переполнено хранилище браузера. Используйте более лёгкое изображение или ссылку вместо загрузки файла.'
+      );
+    }
   };
 
   const updateHours = (idx: number, patch: Partial<WorkingHours>) => {
@@ -51,7 +60,11 @@ export default function StoreSettingsManager() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-semibold text-graphite-950">Контент и настройки магазина</h1>
-        {savedTick > 0 && <span className="text-xs font-medium text-green-700">Сохранено ✓</span>}
+        {saveError ? (
+          <span className="text-xs font-medium text-ember">{saveError}</span>
+        ) : (
+          savedTick > 0 && <span className="text-xs font-medium text-green-700">Сохранено ✓</span>
+        )}
       </div>
 
       <section className="rounded-xl border border-stone-200 bg-white p-5">
@@ -82,12 +95,8 @@ export default function StoreSettingsManager() {
                 className="input"
               />
             </Field>
-            <Field label="Ссылка на фоновое изображение">
-              <input
-                value={form.heroImage}
-                onChange={(e) => save({ ...form, heroImage: e.target.value })}
-                className="input"
-              />
+            <Field label="Фоновое изображение">
+              <ImageField value={form.heroImage} onChange={(value) => save({ ...form, heroImage: value })} />
             </Field>
           </div>
           <div className="h-full min-h-[140px] overflow-hidden rounded-lg bg-stone-100">
