@@ -33,7 +33,7 @@ export default function MobileCategoryBar({
 
   return (
     <>
-      <div className="sticky top-0 z-30 max-w-full border-b border-stone-200 bg-paper/95 backdrop-blur-sm lg:hidden">
+      <div className="max-w-full border-b border-stone-200 bg-paper/95 backdrop-blur-sm lg:hidden">
         <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-4 py-3">
           <button
             onClick={() => setSheetOpen(true)}

@@ -53,24 +53,26 @@ export default function StorefrontPage({ onOpenAdmin }: StorefrontPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-paper">
-      <Header
-        settings={settings}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-        search={search}
-        onSearchChange={setSearch}
-        onOpenAdmin={onOpenAdmin}
-      />
-      <HeroBanner settings={settings} onShopClick={scrollToCatalog} />
+    <div className="flex min-h-screen w-full max-w-full flex-col bg-paper">
+      <div className="sticky top-0 z-40">
+        <Header
+          settings={settings}
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+          search={search}
+          onSearchChange={setSearch}
+          onOpenAdmin={onOpenAdmin}
+        />
+        <MobileCategoryBar
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+          filters={filters}
+          onFiltersChange={setFilters}
+          priceCeiling={priceMax || 200000}
+        />
+      </div>
 
-      <MobileCategoryBar
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-        filters={filters}
-        onFiltersChange={setFilters}
-        priceCeiling={priceMax || 200000}
-      />
+      <HeroBanner settings={settings} onShopClick={scrollToCatalog} />
 
       <main
         ref={catalogRef}

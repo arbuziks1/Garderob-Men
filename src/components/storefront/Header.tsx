@@ -27,7 +27,7 @@ export default function Header({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-graphite-950 text-paper shadow-lg shadow-black/20">
+    <header className="bg-graphite-950 text-paper shadow-lg shadow-black/20">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
         <button
           className="mr-1 rounded-md p-2 text-stone-300 hover:bg-graphite-800 lg:hidden"
@@ -37,14 +37,14 @@ export default function Header({
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
 
-        <a href="#top" className="font-display text-xl tracking-[0.08em] sm:text-2xl">
+        <a href="#top" className="shrink-0 whitespace-nowrap font-display text-xl tracking-[0.08em] sm:text-2xl">
           <span className="font-semibold">GARDEROB</span> <span className="font-normal text-stone-300">MEN</span>
         </a>
 
-        <nav className="ml-8 hidden flex-1 items-center gap-6 lg:flex">
+        <nav className="no-scrollbar ml-6 hidden min-w-0 flex-1 items-center gap-4 overflow-x-auto xl:gap-6 lg:flex">
           <button
             onClick={() => onCategoryChange('Все')}
-            className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
+            className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.06em] transition-colors ${
               activeCategory === 'Все' || activeCategory === null
                 ? 'border-paper text-paper'
                 : 'border-transparent text-stone-400 hover:text-stone-100'
@@ -56,7 +56,7 @@ export default function Header({
             <button
               key={cat}
               onClick={() => onCategoryChange(cat)}
-              className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
+              className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.06em] transition-colors ${
                 activeCategory === cat
                   ? 'border-paper text-paper'
                   : 'border-transparent text-stone-400 hover:text-stone-100'
@@ -67,7 +67,7 @@ export default function Header({
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
           <div className="relative hidden sm:block">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
