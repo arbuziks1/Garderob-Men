@@ -127,6 +127,14 @@ export default function StoreSettingsManager() {
               className="input"
             />
           </Field>
+          <Field label="Ссылка Kaspi Pay (из приложения Kaspi.kz → Kaspi Pay → Поделиться ссылкой)">
+            <input
+              value={form.kaspiPayLink}
+              onChange={(e) => save({ ...form, kaspiPayLink: e.target.value })}
+              placeholder="https://pay.kaspi.kz/pay/..."
+              className="input"
+            />
+          </Field>
           <Field label="Ссылка на Instagram">
             <input
               value={form.instagramUrl}
@@ -138,6 +146,13 @@ export default function StoreSettingsManager() {
             <input value={form.twoGisUrl} onChange={(e) => save({ ...form, twoGisUrl: e.target.value })} className="input" />
           </Field>
         </div>
+
+        {form.kaspiPayLink && (
+          <p className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-xs text-graphite-500">
+            Ссылка одна и та же для всех заказов — сумму клиент вводит сам при оплате. Сверяйте поступление
+            оплаты вручную перед тем как подтвердить заказ.
+          </p>
+        )}
 
         <p className="mb-2 mt-4 text-xs font-medium text-graphite-500">Часы работы</p>
         <div className="flex flex-col gap-2">

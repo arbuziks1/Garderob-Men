@@ -9,6 +9,7 @@ export interface StoreSettings {
   workingHours: WorkingHours[];
   whatsappPhone: string;
   phoneDisplay: string;
+  kaspiPayLink: string;
   instagramUrl: string;
   twoGisUrl: string;
   heroTitle: string;

@@ -1,4 +1,4 @@
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Wallet } from 'lucide-react';
 import type { Order } from '../../types';
 import { useSettings } from '../../hooks/useStore';
 import { buildWhatsAppLink, buildWhatsAppOrderMessage } from '../../utils/whatsapp';
@@ -12,6 +12,7 @@ interface OrderSuccessProps {
 export default function OrderSuccess({ order, onClose }: OrderSuccessProps) {
   const [settings] = useSettings();
   const whatsappLink = buildWhatsAppLink(settings.whatsappPhone, buildWhatsAppOrderMessage(order));
+  const kaspiLink = settings.kaspiPayLink.trim();
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-10 text-center">
@@ -25,6 +26,18 @@ export default function OrderSuccess({ order, onClose }: OrderSuccessProps) {
         </p>
       </div>
 
+      {kaspiLink && (
+        <a
+          href={kaspiLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-center gap-2 rounded-sm bg-red-600 py-3 font-display text-sm uppercase tracking-[0.15em] text-white transition-opacity hover:opacity-90"
+        >
+          <Wallet size={18} />
+          Оплатить через Kaspi
+        </a>
+      )}
+
       <a
         href={whatsappLink}
         target="_blank"
@@ -34,6 +47,12 @@ export default function OrderSuccess({ order, onClose }: OrderSuccessProps) {
         <MessageCircle size={18} />
         Отправить заказ в WhatsApp
       </a>
+
+      {kaspiLink && (
+        <p className="text-xs text-graphite-400">
+          Сумма к оплате: {formatPrice(order.total)} — введите её в приложении Kaspi.kz
+        </p>
+      )}
 
       <button onClick={onClose} className="text-sm font-medium text-graphite-600 underline underline-offset-2">
         Продолжить покупки

@@ -376,6 +376,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   ],
   whatsappPhone: '+77012345678',
   phoneDisplay: '+7 (701) 234-56-78',
+  kaspiPayLink: '',
   instagramUrl: 'https://www.instagram.com/garderob.men',
   twoGisUrl: 'https://go.2gis.com/ev4n5',
   heroTitle: 'GARDEROB MEN',

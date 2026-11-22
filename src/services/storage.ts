@@ -87,7 +87,9 @@ export const storage = {
   },
 
   getSettings(): StoreSettings {
-    return read(KEYS.settings, DEFAULT_STORE_SETTINGS);
+    // merge with defaults so settings saved by an older version of the app
+    // (missing fields added since) don't crash code that reads those fields
+    return { ...DEFAULT_STORE_SETTINGS, ...read(KEYS.settings, DEFAULT_STORE_SETTINGS) };
   },
   saveSettings(settings: StoreSettings): boolean {
     const ok = write(KEYS.settings, settings);
