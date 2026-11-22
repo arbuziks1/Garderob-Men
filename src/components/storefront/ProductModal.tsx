@@ -96,7 +96,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           <p className="text-sm leading-relaxed text-graphite-700">{product.description}</p>
 
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-stone-100 px-2.5 py-1 font-medium text-graphite-700">
+            <span className="rounded-sm bg-stone-100 px-2.5 py-1 font-medium uppercase tracking-wide text-graphite-700">
               Посадка: {product.fit}
             </span>
           </div>
@@ -159,9 +159,9 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           <button
             onClick={handleAdd}
             disabled={!canAdd}
-            className={`mt-2 rounded-full py-3 text-center font-display text-sm uppercase tracking-wider transition-colors ${
+            className={`mt-2 rounded-sm py-3 text-center font-display text-sm uppercase tracking-[0.15em] transition-colors ${
               canAdd
-                ? 'bg-ember text-white hover:bg-ember-light'
+                ? 'bg-ember text-paper hover:bg-ember-light'
                 : 'cursor-not-allowed bg-stone-200 text-stone-400'
             }`}
           >

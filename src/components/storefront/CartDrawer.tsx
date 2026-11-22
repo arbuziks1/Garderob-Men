@@ -176,7 +176,7 @@ export default function CartDrawer() {
 
                 <button
                   onClick={() => setStep('checkout')}
-                  className="w-full rounded-full bg-graphite-950 py-3 font-display text-sm uppercase tracking-wider text-white hover:bg-graphite-800"
+                  className="w-full rounded-sm bg-graphite-950 py-3 font-display text-sm uppercase tracking-[0.15em] text-white transition-colors hover:bg-graphite-800"
                 >
                   Оформить заказ
                 </button>

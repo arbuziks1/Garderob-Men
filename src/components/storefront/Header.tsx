@@ -36,17 +36,17 @@ export default function Header({
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
 
-        <a href="#top" className="font-display text-xl font-bold tracking-wider sm:text-2xl">
+        <a href="#top" className="font-display text-xl font-semibold tracking-[0.08em] sm:text-2xl">
           GARDEROB <span className="text-ember-light">MEN</span>
         </a>
 
-        <nav className="ml-6 hidden flex-1 items-center gap-1 lg:flex">
+        <nav className="ml-8 hidden flex-1 items-center gap-6 lg:flex">
           <button
             onClick={() => onCategoryChange('Все')}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
               activeCategory === 'Все' || activeCategory === null
-                ? 'bg-ember text-white'
-                : 'text-stone-300 hover:bg-graphite-800'
+                ? 'border-ember-light text-ember-light'
+                : 'border-transparent text-stone-400 hover:text-stone-100'
             }`}
           >
             Все товары
@@ -55,8 +55,10 @@ export default function Header({
             <button
               key={cat}
               onClick={() => onCategoryChange(cat)}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                activeCategory === cat ? 'bg-ember text-white' : 'text-stone-300 hover:bg-graphite-800'
+              className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
+                activeCategory === cat
+                  ? 'border-ember-light text-ember-light'
+                  : 'border-transparent text-stone-400 hover:text-stone-100'
               }`}
             >
               {cat}
@@ -71,7 +73,7 @@ export default function Header({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Поиск товаров..."
-              className="w-40 rounded-full border border-graphite-700 bg-graphite-900 py-1.5 pl-9 pr-3 text-sm text-paper placeholder:text-stone-500 focus:w-56 focus:border-ember focus:outline-none transition-all md:w-56"
+              className="w-40 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 pl-9 pr-3 text-sm text-paper placeholder:text-stone-500 focus:w-56 focus:border-ember-light focus:outline-none transition-all md:w-56"
             />
           </div>
 
@@ -111,7 +113,7 @@ export default function Header({
 
           <button
             onClick={onOpenAdmin}
-            className="hidden shrink-0 whitespace-nowrap rounded-full border border-graphite-700 px-3 py-1.5 text-xs font-medium text-stone-400 hover:border-stone-400 hover:text-stone-200 md:block"
+            className="hidden shrink-0 whitespace-nowrap rounded-sm border border-graphite-700 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-stone-400 hover:border-ember-light hover:text-ember-light md:block"
           >
             Админ-панель
           </button>
@@ -123,7 +125,7 @@ export default function Header({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Поиск товаров..."
-          className="w-full shrink-0 rounded-full border border-graphite-700 bg-graphite-900 py-1.5 px-4 text-sm text-paper placeholder:text-stone-500 focus:border-ember focus:outline-none sm:hidden"
+          className="w-full shrink-0 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 px-4 text-sm text-paper placeholder:text-stone-500 focus:border-ember-light focus:outline-none sm:hidden"
         />
       </div>
 
@@ -134,8 +136,10 @@ export default function Header({
               onCategoryChange('Все');
               setMobileMenuOpen(false);
             }}
-            className={`rounded-md px-3 py-2 text-left text-sm font-medium ${
-              activeCategory === 'Все' || activeCategory === null ? 'bg-ember text-white' : 'text-stone-300'
+            className={`border-l-2 px-3 py-2 text-left text-sm font-medium uppercase tracking-wide ${
+              activeCategory === 'Все' || activeCategory === null
+                ? 'border-ember-light text-ember-light'
+                : 'border-transparent text-stone-300'
             }`}
           >
             Все товары
@@ -147,8 +151,8 @@ export default function Header({
                 onCategoryChange(cat);
                 setMobileMenuOpen(false);
               }}
-              className={`rounded-md px-3 py-2 text-left text-sm font-medium ${
-                activeCategory === cat ? 'bg-ember text-white' : 'text-stone-300'
+              className={`border-l-2 px-3 py-2 text-left text-sm font-medium uppercase tracking-wide ${
+                activeCategory === cat ? 'border-ember-light text-ember-light' : 'border-transparent text-stone-300'
               }`}
             >
               {cat}

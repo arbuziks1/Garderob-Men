@@ -161,13 +161,13 @@ export default function CheckoutForm({
           <button
             type="button"
             onClick={onBack}
-            className="rounded-full border border-stone-300 px-5 py-3 text-sm font-medium text-graphite-800"
+            className="rounded-sm border border-stone-300 px-5 py-3 text-sm font-medium text-graphite-800"
           >
             Назад
           </button>
           <button
             type="submit"
-            className="flex-1 rounded-full bg-ember py-3 font-display text-sm uppercase tracking-wider text-white hover:bg-ember-light"
+            className="flex-1 rounded-sm bg-ember py-3 font-display text-sm uppercase tracking-[0.15em] text-paper transition-colors hover:bg-ember-light"
           >
             Подтвердить заказ
           </button>

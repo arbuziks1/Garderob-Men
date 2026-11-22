@@ -17,8 +17,9 @@
   --color-stone-200: #e7e5e4;
   --color-stone-100: #f1efec;
   --color-paper: #faf9f7;
-  --color-ember: #c2651b;
-  --color-ember-light: #e08a3f;
+  --color-ember: #8a6a35;
+  --color-ember-light: #ad8c52;
+  --color-ember-dark: #6b511f;
 }
 
 html {

@@ -65,7 +65,7 @@ export default function CatalogFilters({ filters, onChange, priceCeiling }: Cata
             <button
               key={fit}
               onClick={() => toggleFit(fit)}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-sm border px-3 py-1.5 text-sm font-medium transition-colors ${
                 filters.fits.includes(fit)
                   ? 'border-graphite-950 bg-graphite-950 text-white'
                   : 'border-stone-300 text-graphite-800 hover:border-graphite-600'
@@ -113,7 +113,7 @@ export default function CatalogFilters({ filters, onChange, priceCeiling }: Cata
   return (
     <>
       <div className="hidden lg:block lg:w-64 lg:shrink-0">
-        <div className="sticky top-24 rounded-xl border border-stone-200 bg-white p-5">
+        <div className="sticky top-24 rounded-sm border border-stone-200 bg-white p-5">
           <p className="mb-4 font-display text-sm uppercase tracking-wide text-graphite-950">Фильтры</p>
           {body}
         </div>
@@ -122,7 +122,7 @@ export default function CatalogFilters({ filters, onChange, priceCeiling }: Cata
       <div className="mb-4 lg:hidden">
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-graphite-800"
+          className="flex items-center gap-2 rounded-sm border border-stone-300 px-4 py-2 text-sm font-medium text-graphite-800"
         >
           <SlidersHorizontal size={15} />
           Фильтры
@@ -143,7 +143,7 @@ export default function CatalogFilters({ filters, onChange, priceCeiling }: Cata
             {body}
             <button
               onClick={() => setOpen(false)}
-              className="mt-6 rounded-full bg-graphite-950 py-3 text-sm font-medium text-white"
+              className="mt-6 rounded-sm bg-graphite-950 py-3 text-sm font-medium uppercase tracking-wider text-white"
             >
               Показать товары
             </button>

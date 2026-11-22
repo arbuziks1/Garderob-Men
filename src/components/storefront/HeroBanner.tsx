@@ -19,22 +19,23 @@ export default function HeroBanner({ settings, onShopClick }: HeroBannerProps) {
 
       <div className="relative mx-auto flex max-w-7xl flex-col gap-8 px-4 py-16 sm:px-6 sm:py-24 lg:flex-row lg:items-end lg:justify-between lg:py-32">
         <div className="max-w-xl">
-          <p className="mb-3 font-display text-sm uppercase tracking-[0.3em] text-ember-light">
-            Усть-Каменогорск
-          </p>
-          <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="h-px w-10 bg-ember-light" />
+            <p className="font-display text-xs uppercase tracking-[0.35em] text-ember-light">Усть-Каменогорск</p>
+          </div>
+          <h1 className="font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             {settings.heroTitle}
           </h1>
-          <p className="mt-5 max-w-md text-base text-stone-300 sm:text-lg">{settings.heroSubtitle}</p>
+          <p className="mt-5 max-w-md text-base font-light text-stone-300 sm:text-lg">{settings.heroSubtitle}</p>
           <button
             onClick={onShopClick}
-            className="mt-8 rounded-full bg-ember px-7 py-3 font-display text-sm uppercase tracking-wider text-white transition-colors hover:bg-ember-light"
+            className="mt-9 rounded-sm border border-ember-light bg-ember px-8 py-3 font-display text-xs uppercase tracking-[0.2em] text-paper transition-colors hover:bg-ember-light hover:text-graphite-950"
           >
             {settings.heroCtaLabel}
           </button>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-graphite-900/70 p-5 backdrop-blur-sm sm:min-w-[280px]">
+        <div className="flex flex-col gap-3 rounded-sm border border-ember-light/25 bg-graphite-900/70 p-5 backdrop-blur-sm sm:min-w-[280px]">
           <div className="flex items-start gap-3">
             <MapPin size={18} className="mt-0.5 shrink-0 text-ember-light" />
             <p className="text-sm text-stone-200">{settings.address}</p>

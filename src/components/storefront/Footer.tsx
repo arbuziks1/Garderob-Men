@@ -53,7 +53,7 @@ export default function Footer({ settings, onOpenAdmin }: FooterProps) {
             </a>
             <button
               onClick={onOpenAdmin}
-              className="mt-4 rounded-full border border-graphite-700 px-3 py-1.5 text-xs text-stone-500 hover:border-stone-400 hover:text-stone-200"
+              className="mt-4 rounded-sm border border-graphite-700 px-3 py-1.5 text-[11px] uppercase tracking-wider text-stone-500 hover:border-ember-light hover:text-ember-light"
             >
               Админ-панель
             </button>

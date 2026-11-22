@@ -29,7 +29,7 @@ export default function OrderSuccess({ order, onClose }: OrderSuccessProps) {
         href={whatsappLink}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 font-display text-sm uppercase tracking-wider text-white hover:opacity-90"
+        className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#25D366] py-3 font-display text-sm uppercase tracking-[0.15em] text-white transition-opacity hover:opacity-90"
       >
         <MessageCircle size={18} />
         Отправить заказ в WhatsApp
