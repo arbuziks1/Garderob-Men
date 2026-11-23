@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import type { ColorVariant, Fit, Product, SizeFit, SizeStock } from '../../types';
 import { CATEGORIES, FITS, SIZE_FIT_LABEL, SIZE_FITS } from '../../types';
@@ -17,12 +17,12 @@ interface ProductFormProps {
 }
 
 function emptySizeRow(): SizeStock {
-  return { id: `temp${Date.now()}${Math.random()}`, stock: 0 };
+  return { id: `temp-${crypto.randomUUID()}`, stock: 0 };
 }
 
 function emptyColor(): ColorVariant {
   return {
-    id: `c${Date.now()}${Math.floor(Math.random() * 1000)}`,
+    id: `c-${crypto.randomUUID()}`,
     name: 'Новый цвет',
     hex: '#27272a',
     images: [''],
@@ -70,6 +70,15 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
   const [extraRows, setExtraRows] = useState<ExtraRow[]>(extraRowsFromProduct(product));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [justAddedColorId, setJustAddedColorId] = useState<string | null>(null);
+  const colorRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!justAddedColorId) return;
+    colorRefs.current[justAddedColorId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const timer = setTimeout(() => setJustAddedColorId(null), 1200);
+    return () => clearTimeout(timer);
+  }, [justAddedColorId]);
 
   const updateExtraRow = (id: string, patch: Partial<Pick<ExtraRow, 'key' | 'value'>>) => {
     setExtraRows((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -190,7 +199,11 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     }));
   };
 
-  const addColor = () => setForm((f) => ({ ...f, colors: [...f.colors, emptyColor()] }));
+  const addColor = () => {
+    const color = emptyColor();
+    setForm((f) => ({ ...f, colors: [...f.colors, color] }));
+    setJustAddedColorId(color.id);
+  };
 
   const removeColor = (idx: number) => {
     if (form.colors.length <= 1) return;
@@ -390,7 +403,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
             <div className="border-t border-stone-200 pt-4">
               <p className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-graphite-800">
-                Характеристики (как в Kaspi Магазин)
+                Характеристики
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Бренд">
@@ -545,7 +558,20 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
               <div className="flex flex-col gap-4">
                 {form.colors.map((color, colorIdx) => (
-                  <div key={color.id} className="rounded-xl border border-stone-200 p-4">
+                  <div
+                    key={color.id}
+                    ref={(el) => {
+                      colorRefs.current[color.id] = el;
+                    }}
+                    className={`rounded-xl border p-4 transition-shadow duration-700 ${
+                      justAddedColorId === color.id
+                        ? 'border-ember shadow-[0_0_0_3px_rgba(193,86,48,0.15)]'
+                        : 'border-stone-200'
+                    }`}
+                  >
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-graphite-400">
+                      Цвет {colorIdx + 1}
+                    </p>
                     <div className="mb-3 flex items-center gap-3">
                       <input
                         type="color"

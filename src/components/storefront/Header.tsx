@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, MapPin, Menu, Search, ShoppingBag, X } from 'lucide-react';
 import type { Category } from '../../types';
@@ -119,13 +118,6 @@ export default function Header({
               )}
             </AnimatePresence>
           </button>
-
-          <Link
-            to="/admin"
-            className="hidden shrink-0 whitespace-nowrap rounded-sm border border-graphite-700 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-stone-400 hover:border-stone-300 hover:text-stone-100 md:block"
-          >
-            Админ-панель
-          </Link>
         </div>
       </div>
 
@@ -175,12 +167,6 @@ export default function Header({
               <MapPin size={16} /> 2ГИС
             </a>
           </div>
-          <Link
-            to="/admin"
-            className="mt-2 rounded-md border border-graphite-700 px-3 py-2 text-left text-xs font-medium text-stone-400"
-          >
-            Админ-панель
-          </Link>
         </div>
       )}
     </header>

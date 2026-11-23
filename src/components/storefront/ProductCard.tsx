@@ -11,19 +11,23 @@ interface ProductCardProps {
   onClick: () => void;
 }
 
-/** One badge per distinct size label that's actually in stock in at least one color
- *  (prefers the INT letter grid for a compact label, falls back to RU/EU) — sizes with
- *  zero stock everywhere are left out entirely, not shown struck-through. */
-function sizeBadges(product: Product): string[] {
-  const inStockLabels = new Set<string>();
+/** In-stock size labels for the two rows shown on the card: the primary row (INT letter
+ *  grid, falling back to RU/EU when a product has no INT labels at all — jeans/shoes/caps)
+ *  and, only when the product actually has a distinct RU grid alongside it (jackets, suits,
+ *  shirts), a second row of RU numbers. Sizes with zero stock everywhere are left out
+ *  entirely rather than shown struck-through. */
+function sizeBadges(product: Product): { primary: string[]; ru: string[] } {
+  const primaryLabels = new Set<string>();
+  const ruLabels = new Set<string>();
   for (const color of product.colors) {
     for (const s of color.sizes) {
       if (s.stock <= 0) continue;
-      const label = s.sizeInt ?? s.sizeRu ?? s.sizeEu;
-      if (label) inStockLabels.add(label);
+      const primary = s.sizeInt ?? s.sizeRu ?? s.sizeEu;
+      if (primary) primaryLabels.add(primary);
+      if (s.sizeRu) ruLabels.add(s.sizeRu);
     }
   }
-  return sortSizeLabels([...inStockLabels]);
+  return { primary: sortSizeLabels([...primaryLabels]), ru: sortSizeLabels([...ruLabels]) };
 }
 
 export default function ProductCard({ product, onClick }: ProductCardProps) {
@@ -71,12 +75,26 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
           {product.title}
         </p>
 
-        <div className="flex flex-wrap gap-1.5 pt-0.5 text-[11px] font-medium tracking-wide">
-          {badges.map((label) => (
-            <span key={label} className="text-graphite-600">
-              {label}
-            </span>
-          ))}
+        <div className="flex flex-col gap-1 pt-0.5">
+          {badges.primary.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium tracking-wide">
+              {badges.primary.map((label) => (
+                <span key={label} className="text-graphite-600">
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
+          {badges.ru.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium tracking-wide">
+              <span className="text-stone-400">RU</span>
+              {badges.ru.map((label) => (
+                <span key={label} className="text-graphite-600">
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-auto flex items-baseline gap-2 pt-1.5 tabular-nums">

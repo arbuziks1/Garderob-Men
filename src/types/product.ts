@@ -10,9 +10,9 @@ export type Fit = 'Oversize' | 'Regular' | 'Slim';
 export type SizeFit = 'SMALL_FIT' | 'TRUE_TO_SIZE' | 'BIG_FIT';
 
 export const SIZE_FIT_LABEL: Record<SizeFit, string> = {
-  SMALL_FIT: 'Маломерит (рекомендуем брать на размер больше)',
-  TRUE_TO_SIZE: 'Идёт размер в размер (True to size)',
-  BIG_FIT: 'Большемерит (свободная посадка, можно на размер меньше)',
+  SMALL_FIT: 'Маломерит. Берите на размер больше.',
+  TRUE_TO_SIZE: 'Идёт размер в размер.',
+  BIG_FIT: 'Большемерит. Можно взять размер меньше.',
 };
 
 export const SIZE_FITS: SizeFit[] = ['SMALL_FIT', 'TRUE_TO_SIZE', 'BIG_FIT'];
