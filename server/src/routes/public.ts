@@ -4,6 +4,7 @@ import { serializeOrderFull, serializeOrderPublic, serializeProduct } from '../l
 import { createOrder, InsufficientStockError, markOrderPaid } from '../services/orderLifecycle';
 import { getPaymentProvider, isMockPaymentMode } from '../services/payment';
 import { safeEqual } from '../services/payment/kaspiPayService';
+import { TipTopPayService } from '../services/payment/tipTopPayService';
 
 export const publicRouter = Router();
 
@@ -112,6 +113,30 @@ publicRouter.post('/webhooks/kaspi', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Kaspi webhook handling failed:', err);
+    res.status(400).json({ error: (err as Error).message });
+  }
+});
+
+// Separate, dedicated endpoint for TipTop Pay — not routed through getPaymentProvider(),
+// because the webhook URL itself identifies which provider is calling, independent of
+// which one PAYMENT_PROVIDER currently has active for new payment links.
+const tipTopProvider = new TipTopPayService();
+publicRouter.post('/webhooks/tiptop', async (req, res) => {
+  const secret = process.env.TIPTOP_WEBHOOK_SECRET ?? '';
+  const provided = (req.headers['x-tiptop-signature'] as string | undefined) ?? '';
+  if (!secret || !safeEqual(provided, secret)) {
+    res.status(401).json({ error: 'Invalid webhook signature' });
+    return;
+  }
+
+  try {
+    const result = await tipTopProvider.handleWebhook(req.body, provided);
+    if (result.status === 'paid') {
+      await markOrderPaid(result.orderId, result.transactionId);
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('TipTop webhook handling failed:', err);
     res.status(400).json({ error: (err as Error).message });
   }
 });
