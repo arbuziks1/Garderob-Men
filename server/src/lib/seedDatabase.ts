@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { prisma } from './prisma';
 import { LABEL_TO_CATEGORY, LABEL_TO_FIT } from './labels';
+import { generateSku } from './sku';
 import { DEFAULT_PROMO_CODES, DEFAULT_STORE_SETTINGS, SEED_PRODUCTS } from './seedData';
 
 /** Creates the initial admin user from ADMIN_EMAIL/ADMIN_PASSWORD if one doesn't exist yet.
@@ -43,38 +44,51 @@ async function resetCatalogAndSettings() {
   }
 
   await prisma.product.deleteMany({});
+  // Generating the sku requires the CategorySkuCounter upsert to happen inside the same
+  // transaction as the product create (see generateSku's docs) — each product gets its
+  // own small transaction rather than wrapping the whole seed loop in one, so this never
+  // hits Prisma's interactive-transaction timeout on a slow machine.
   for (const product of SEED_PRODUCTS) {
     const category = LABEL_TO_CATEGORY[product.category];
     const fit = LABEL_TO_FIT[product.fit];
-    await prisma.product.create({
-      data: {
-        title: product.title,
-        category,
-        fit,
-        price: product.price,
-        oldPrice: product.oldPrice,
-        description: product.description,
-        modelNote: product.modelNote,
-        brand: product.brand,
-        countryOfOrigin: product.countryOfOrigin,
-        season: product.season,
-        material: product.material,
-        composition: product.composition,
-        characteristics: product.characteristics,
-        colors: {
-          create: product.colors.map((color, position) => ({
-            name: color.name,
-            hex: color.hex,
-            position,
-            stockS: color.stock.S,
-            stockM: color.stock.M,
-            stockL: color.stock.L,
-            stockXl: color.stock.XL,
-            stockXxl: color.stock.XXL,
-            images: { create: color.images.map((url, imgPosition) => ({ url, position: imgPosition })) },
-          })),
+    await prisma.$transaction(async (tx) => {
+      const sku = await generateSku(tx, category);
+      await tx.product.create({
+        data: {
+          sku,
+          title: product.title,
+          category,
+          fit,
+          sizeFit: product.sizeFit ?? null,
+          price: product.price,
+          oldPrice: product.oldPrice,
+          description: product.description,
+          modelNote: product.modelNote,
+          brand: product.brand,
+          countryOfOrigin: product.countryOfOrigin,
+          season: product.season,
+          material: product.material,
+          composition: product.composition,
+          characteristics: product.characteristics,
+          colors: {
+            create: product.colors.map((color, position) => ({
+              name: color.name,
+              hex: color.hex,
+              position,
+              images: { create: color.images.map((url, imgPosition) => ({ url, position: imgPosition })) },
+              sizes: {
+                create: color.sizes.map((s, sizePosition) => ({
+                  sizeRu: s.sizeRu ?? null,
+                  sizeEu: s.sizeEu ?? null,
+                  sizeInt: s.sizeInt ?? null,
+                  stock: s.stock,
+                  position: sizePosition,
+                })),
+              },
+            })),
+          },
         },
-      },
+      });
     });
   }
 }

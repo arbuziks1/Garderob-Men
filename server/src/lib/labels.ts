@@ -46,18 +46,3 @@ export const PAYMENT_TO_LABEL: Record<PaymentMethod, string> = {
 export const LABEL_TO_PAYMENT: Record<string, PaymentMethod> = Object.fromEntries(
   Object.entries(PAYMENT_TO_LABEL).map(([enumVal, label]) => [label, enumVal as PaymentMethod])
 );
-
-const SIZE_TO_COLUMN = {
-  S: 'stockS',
-  M: 'stockM',
-  L: 'stockL',
-  XL: 'stockXl',
-  XXL: 'stockXxl',
-} as const;
-
-export type SizeKey = keyof typeof SIZE_TO_COLUMN;
-export const SIZES: SizeKey[] = ['S', 'M', 'L', 'XL', 'XXL'];
-
-export function stockColumnForSize(size: string): (typeof SIZE_TO_COLUMN)[SizeKey] | null {
-  return SIZE_TO_COLUMN[size as SizeKey] ?? null;
-}

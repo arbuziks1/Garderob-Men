@@ -4,9 +4,11 @@ import path from 'node:path';
 import { Router } from 'express';
 import multer from 'multer';
 import sharp from 'sharp';
+import type { SizeFit } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { LABEL_TO_CATEGORY, LABEL_TO_FIT } from '../lib/labels';
 import { serializeProduct } from '../lib/serializers';
+import { generateSku } from '../lib/sku';
 
 export const adminProductsRouter = Router();
 
@@ -43,18 +45,27 @@ adminProductsRouter.post('/upload', upload.single('image'), async (req, res) => 
   }
 });
 
+interface SizeInput {
+  id?: string;
+  sizeRu?: string;
+  sizeEu?: string;
+  sizeInt?: string;
+  stock: number;
+}
+
 interface ColorInput {
   id?: string;
   name: string;
   hex: string;
   images: string[];
-  stock: { S: number; M: number; L: number; XL: number; XXL: number };
+  sizes: SizeInput[];
 }
 
 interface ProductInput {
   title: string;
   category: string;
   fit: string;
+  sizeFit?: SizeFit;
   price: number;
   oldPrice?: number;
   description: string;
@@ -73,18 +84,22 @@ function colorsCreateData(colors: ColorInput[]) {
     name: color.name,
     hex: color.hex,
     position,
-    stockS: color.stock.S,
-    stockM: color.stock.M,
-    stockL: color.stock.L,
-    stockXl: color.stock.XL,
-    stockXxl: color.stock.XXL,
     images: {
       create: color.images.map((url, imgPosition) => ({ url, position: imgPosition })),
+    },
+    sizes: {
+      create: color.sizes.map((s, sizePosition) => ({
+        sizeRu: s.sizeRu?.trim() || null,
+        sizeEu: s.sizeEu?.trim() || null,
+        sizeInt: s.sizeInt?.trim() || null,
+        stock: s.stock,
+        position: sizePosition,
+      })),
     },
   }));
 }
 
-const include = { colors: { include: { images: true } } } as const;
+const include = { colors: { include: { images: true, sizes: { orderBy: { position: 'asc' } } } } } as const;
 
 /** Treats a blank optional text field as "not set" (null) rather than storing an empty
  *  string — used on both create and update so clearing a field in the admin form actually
@@ -106,24 +121,29 @@ adminProductsRouter.post('/', async (req, res) => {
     if (!category) throw new Error(`Unknown category label: ${body.category}`);
     if (!fit) throw new Error(`Unknown fit label: ${body.fit}`);
 
-    const product = await prisma.product.create({
-      data: {
-        title: body.title,
-        category,
-        fit,
-        price: body.price,
-        oldPrice: body.oldPrice,
-        description: body.description,
-        modelNote: body.modelNote,
-        brand: blankToNull(body.brand),
-        countryOfOrigin: blankToNull(body.countryOfOrigin),
-        season: blankToNull(body.season),
-        material: blankToNull(body.material),
-        composition: blankToNull(body.composition),
-        characteristics: body.characteristics ?? undefined,
-        colors: { create: colorsCreateData(body.colors) },
-      },
-      include,
+    const product = await prisma.$transaction(async (tx) => {
+      const sku = await generateSku(tx, category);
+      return tx.product.create({
+        data: {
+          sku,
+          title: body.title,
+          category,
+          fit,
+          sizeFit: body.sizeFit ?? null,
+          price: body.price,
+          oldPrice: body.oldPrice,
+          description: body.description,
+          modelNote: body.modelNote,
+          brand: blankToNull(body.brand),
+          countryOfOrigin: blankToNull(body.countryOfOrigin),
+          season: blankToNull(body.season),
+          material: blankToNull(body.material),
+          composition: blankToNull(body.composition),
+          characteristics: body.characteristics ?? undefined,
+          colors: { create: colorsCreateData(body.colors) },
+        },
+        include,
+      });
     });
     res.status(201).json(serializeProduct(product));
   } catch (err) {
@@ -141,9 +161,11 @@ adminProductsRouter.put('/:id', async (req, res) => {
 
     // The admin form always submits the whole product (same semantics as the old
     // localStorage storage.upsertProduct), so the simplest correct update is to
-    // replace all colors/images rather than diff them. Deleting ProductColor rows
-    // cascades to their ProductImage rows; OrderItem keeps its snapshot fields and
-    // only loses its productId FK if the product itself is later deleted, not here.
+    // replace all colors/images/sizes rather than diff them. Deleting ProductColor
+    // rows cascades to ProductImage and ProductSizeStock rows; any OrderItem that
+    // referenced one of those size rows keeps its snapshot fields and just has its
+    // sizeStockId set to null (onDelete: SetNull) — historical orders stay readable.
+    // `sku` is deliberately never part of this update — once assigned it's permanent.
     const product = await prisma.$transaction(async (tx) => {
       await tx.productColor.deleteMany({ where: { productId: req.params.id } });
       return tx.product.update({
@@ -152,6 +174,7 @@ adminProductsRouter.put('/:id', async (req, res) => {
           title: body.title,
           category,
           fit,
+          sizeFit: body.sizeFit ?? null,
           price: body.price,
           oldPrice: body.oldPrice,
           description: body.description,

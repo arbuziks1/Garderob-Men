@@ -1,20 +1,21 @@
 import type { Order, OrderStatus } from '@prisma/client';
 import { prisma } from '../lib/prisma';
-import { LABEL_TO_DELIVERY, LABEL_TO_PAYMENT, stockColumnForSize } from '../lib/labels';
+import { LABEL_TO_DELIVERY, LABEL_TO_PAYMENT } from '../lib/labels';
 import { getFiscalProvider } from './fiscal';
 
 export class InsufficientStockError extends Error {
   constructor(
-    public readonly item: { productId: string; colorId: string; size: string; requested: number }
+    public readonly item: { productId: string; colorId: string; sizeStockId: string; requested: number }
   ) {
-    super(`Insufficient stock for size ${item.size}`);
+    super(`Insufficient stock for size stock row ${item.sizeStockId}`);
   }
 }
 
 export interface CreateOrderItemInput {
   productId: string;
   colorId: string;
-  size: string;
+  sizeStockId: string;
+  sizeLabel: string; // display label the customer saw, e.g. "48 (RU)" — stored verbatim
   quantity: number;
 }
 
@@ -55,25 +56,31 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { it
   if (!paymentMethod) throw new Error(`Unknown payment method label: ${input.payment}`);
 
   return prisma.$transaction(async (tx) => {
-    // Load snapshot data (title/color name/price) for the items we're about to create,
-    // and the color rows so we know which to decrement.
+    // Load snapshot data (title/sku/color name/price) for the items we're about to
+    // create, and the color rows so we can verify each size row actually belongs to
+    // the color/product the client claims (never trust a client-supplied sizeStockId
+    // blindly — it could otherwise be used to decrement stock on an unrelated color).
     const colors = await tx.productColor.findMany({
       where: { id: { in: input.items.map((i) => i.colorId) } },
       include: { product: true },
     });
     const colorById = new Map(colors.map((c) => [c.id, c]));
 
+    const sizeStocks = await tx.productSizeStock.findMany({
+      where: { id: { in: input.items.map((i) => i.sizeStockId) } },
+    });
+    const sizeStockById = new Map(sizeStocks.map((s) => [s.id, s]));
+
     for (const item of input.items) {
       const color = colorById.get(item.colorId);
-      if (!color || color.productId !== item.productId) {
+      const sizeStock = sizeStockById.get(item.sizeStockId);
+      if (!color || color.productId !== item.productId || !sizeStock || sizeStock.colorId !== item.colorId) {
         throw new InsufficientStockError({ ...item, requested: item.quantity });
       }
-      const column = stockColumnForSize(item.size);
-      if (!column) throw new Error(`Unknown size: ${item.size}`);
 
-      const result = await tx.productColor.updateMany({
-        where: { id: item.colorId, [column]: { gte: item.quantity } },
-        data: { [column]: { decrement: item.quantity } },
+      const result = await tx.productSizeStock.updateMany({
+        where: { id: item.sizeStockId, stock: { gte: item.quantity } },
+        data: { stock: { decrement: item.quantity } },
       });
       if (result.count === 0) {
         throw new InsufficientStockError({ ...item, requested: item.quantity });
@@ -99,9 +106,11 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { it
             const color = colorById.get(item.colorId)!;
             return {
               productId: item.productId,
+              sizeStockId: item.sizeStockId,
+              skuSnapshot: color.product.sku,
               titleSnapshot: color.product.title,
               colorNameSnapshot: color.name,
-              size: item.size,
+              size: item.sizeLabel,
               priceSnapshot: color.product.price,
               quantity: item.quantity,
             };
@@ -127,20 +136,16 @@ export async function transitionOrderStatus(orderId: string, nextStatus: OrderSt
     }
 
     if (nextStatus === 'CANCELLED') {
-      // OrderItem only snapshots productId + colorNameSnapshot (not colorId), so the
-      // color to credit back is looked up by product + color name. If the color was
-      // since renamed or deleted, this intentionally finds nothing and skips that
-      // line rather than guessing — an admin can adjust stock manually in that case.
+      // Restore stock directly on the exact ProductSizeStock row the order decremented.
+      // If that row (or its color) was since deleted by the admin, sizeStockId is
+      // already null (onDelete: SetNull) — intentionally skip restoring in that case
+      // rather than guessing; an admin can adjust stock manually.
       for (const item of order.items) {
-        if (!item.productId) continue;
-        const column = stockColumnForSize(item.size);
-        if (!column) continue;
-        const color = await tx.productColor.findFirst({
-          where: { productId: item.productId, name: item.colorNameSnapshot },
+        if (!item.sizeStockId) continue;
+        await tx.productSizeStock.update({
+          where: { id: item.sizeStockId },
+          data: { stock: { increment: item.quantity } },
         });
-        if (color) {
-          await tx.productColor.update({ where: { id: color.id }, data: { [column]: { increment: item.quantity } } });
-        }
       }
     }
 

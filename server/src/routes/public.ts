@@ -9,7 +9,7 @@ export const publicRouter = Router();
 
 publicRouter.get('/products', async (_req, res) => {
   const products = await prisma.product.findMany({
-    include: { colors: { include: { images: true } } },
+    include: { colors: { include: { images: true, sizes: { orderBy: { position: 'asc' } } } } },
     orderBy: { createdAt: 'asc' },
   });
   res.json(products.map(serializeProduct));
@@ -40,7 +40,7 @@ publicRouter.post('/orders', async (req, res) => {
       phone?: string;
       delivery?: string;
       payment?: string;
-      items?: { productId: string; colorId: string; size: string; quantity: number }[];
+      items?: { productId: string; colorId: string; sizeStockId: string; sizeLabel: string; quantity: number }[];
       subtotal?: number;
       discount?: number;
       promoCode?: string;

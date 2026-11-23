@@ -1,4 +1,4 @@
-import type { Order, OrderItem, Product, ProductColor, ProductImage } from '@prisma/client';
+import type { Order, OrderItem, Product, ProductColor, ProductImage, ProductSizeStock } from '@prisma/client';
 import {
   CATEGORY_TO_LABEL,
   DELIVERY_TO_LABEL,
@@ -6,15 +6,19 @@ import {
   PAYMENT_TO_LABEL,
 } from './labels';
 
-type ColorWithImages = ProductColor & { images: ProductImage[] };
-type ProductWithColors = Product & { colors: ColorWithImages[] };
+type ColorWithSizes = ProductColor & { images: ProductImage[]; sizes: ProductSizeStock[] };
+type ProductWithColors = Product & { colors: ColorWithSizes[] };
 
 export function serializeProduct(product: ProductWithColors) {
   return {
     id: product.id,
+    sku: product.sku,
     title: product.title,
     category: CATEGORY_TO_LABEL[product.category],
     fit: FIT_TO_LABEL[product.fit],
+    // Raw enum value (SMALL_FIT/TRUE_TO_SIZE/BIG_FIT) — same pattern as OrderStatus:
+    // the frontend maps it to a Russian label itself.
+    sizeFit: product.sizeFit ?? undefined,
     price: product.price,
     oldPrice: product.oldPrice ?? undefined,
     description: product.description,
@@ -33,13 +37,15 @@ export function serializeProduct(product: ProductWithColors) {
         name: color.name,
         hex: color.hex,
         images: [...color.images].sort((a, b) => a.position - b.position).map((img) => img.url),
-        stock: {
-          S: color.stockS,
-          M: color.stockM,
-          L: color.stockL,
-          XL: color.stockXl,
-          XXL: color.stockXxl,
-        },
+        sizes: [...color.sizes]
+          .sort((a, b) => a.position - b.position)
+          .map((s) => ({
+            id: s.id,
+            sizeRu: s.sizeRu ?? undefined,
+            sizeEu: s.sizeEu ?? undefined,
+            sizeInt: s.sizeInt ?? undefined,
+            stock: s.stock,
+          })),
       })),
   };
 }
@@ -49,6 +55,7 @@ type OrderWithItems = Order & { items: OrderItem[] };
 function serializeItems(items: OrderItem[]) {
   return items.map((item) => ({
     productId: item.productId ?? undefined,
+    sku: item.skuSnapshot,
     title: item.titleSnapshot,
     colorName: item.colorNameSnapshot,
     size: item.size,

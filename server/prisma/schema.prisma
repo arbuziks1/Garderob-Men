@@ -40,11 +40,25 @@ enum OrderStatus {
   DELIVERED
 }
 
+enum SizeFit {
+  SMALL_FIT    // Маломерит
+  TRUE_TO_SIZE // Идёт размер в размер
+  BIG_FIT      // Большемерит
+}
+
+// Per-category sequential counter used to generate SKUs like GM-OUT-0014.
+model CategorySkuCounter {
+  category   Category @id
+  lastNumber Int      @default(0)
+}
+
 model Product {
   id          String   @id @default(cuid())
+  sku         String   @unique
   title       String
   category    Category
   fit         Fit
+  sizeFit     SizeFit?
   price       Int
   oldPrice    Int?
   description String
@@ -75,13 +89,8 @@ model ProductColor {
   hex      String
   position Int    @default(0)
 
-  stockS   Int @default(0)
-  stockM   Int @default(0)
-  stockL   Int @default(0)
-  stockXl  Int @default(0)
-  stockXxl Int @default(0)
-
   images ProductImage[]
+  sizes  ProductSizeStock[]
 
   @@index([productId])
 }
@@ -92,6 +101,26 @@ model ProductImage {
   color    ProductColor @relation(fields: [colorId], references: [id], onDelete: Cascade)
   url      String
   position Int          @default(0)
+
+  @@index([colorId])
+}
+
+// Replaces the old fixed stockS/stockM/stockL/stockXl/stockXxl columns — a color can
+// now have any number of size rows, each carrying whichever of the RU/EU/INT size-grid
+// labels apply (a row may have only one of the three filled in, e.g. jeans waist sizes
+// are INT-only: sizeInt="W30", sizeRu/sizeEu left null).
+model ProductSizeStock {
+  id      String       @id @default(cuid())
+  colorId String
+  color   ProductColor @relation(fields: [colorId], references: [id], onDelete: Cascade)
+
+  sizeRu   String?
+  sizeEu   String?
+  sizeInt  String?
+  stock    Int    @default(0)
+  position Int    @default(0)
+
+  orderItems OrderItem[]
 
   @@index([colorId])
 }
@@ -131,9 +160,15 @@ model OrderItem {
   productId String?
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
+  // Nullable + SetNull so deleting a size row (or the whole color) later doesn't delete
+  // historical order rows — the size snapshot string below is what's actually displayed.
+  sizeStockId String?
+  sizeStock   ProductSizeStock? @relation(fields: [sizeStockId], references: [id], onDelete: SetNull)
+
+  skuSnapshot       String
   titleSnapshot     String
   colorNameSnapshot String
-  size              String
+  size              String // display label shown to the customer, e.g. "48 (RU)"
   priceSnapshot     Int
   quantity          Int
 

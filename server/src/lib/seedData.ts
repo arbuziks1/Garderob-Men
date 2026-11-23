@@ -2,6 +2,8 @@
 // codes) so a fresh VPS database isn't empty on first boot. SEED_ORDERS is deliberately
 // NOT ported — see prisma/seed.ts for why.
 
+import type { SizeFit } from '@prisma/client';
+
 function unsplash(id: string, w = 900): string {
   return `https://images.unsplash.com/${id}?w=${w}&q=80&auto=format&fit=crop`;
 }
@@ -31,25 +33,25 @@ const IMG = {
   bootsFlatlay: unsplash('photo-1614676471928-2ed0ad1061a4'),
 };
 
-interface SeedStock {
-  S: number;
-  M: number;
-  L: number;
-  XL: number;
-  XXL: number;
+interface SeedSizeStock {
+  sizeRu?: string;
+  sizeEu?: string;
+  sizeInt?: string;
+  stock: number;
 }
 
 interface SeedColor {
   name: string;
   hex: string;
   images: string[];
-  stock: SeedStock;
+  sizes: SeedSizeStock[];
 }
 
 export interface SeedProduct {
   title: string;
   category: string; // Russian label, matches LABEL_TO_CATEGORY
   fit: string; // Russian label, matches LABEL_TO_FIT
+  sizeFit?: SizeFit;
   price: number;
   oldPrice?: number;
   description: string;
@@ -63,8 +65,43 @@ export interface SeedProduct {
   characteristics?: Record<string, string>;
 }
 
-function stock(s: number, m: number, l: number, xl: number, xxl: number): SeedStock {
-  return { S: s, M: m, L: l, XL: xl, XXL: xxl };
+// Standard RU clothing-size ↔ international-letter mapping (RU and EU coincide as plain
+// numbers in this market, so a "RU/EU" grid just reuses the same number for both).
+const RU_TO_INT: Record<string, string> = {
+  '44': 'XS',
+  '46': 'S',
+  '48': 'M',
+  '50': 'L',
+  '52': 'XL',
+  '54': '2XL',
+  '56': '3XL',
+  '58': '4XL',
+};
+
+/** A size row per RU number given, with EU mirrored and INT derived from the mapping —
+ *  demonstrates the "all three grids filled, pick any one on the switcher" case. */
+function ruGrid(entries: [ru: string, stock: number][]): SeedSizeStock[] {
+  return entries.map(([ru, stockQty]) => ({ sizeRu: ru, sizeEu: ru, sizeInt: RU_TO_INT[ru], stock: stockQty }));
+}
+
+/** Jeans waist sizes — INT-only ("W30"), no RU/EU equivalent on purpose: demonstrates
+ *  the "only one grid filled in" case the size switcher has to handle gracefully. */
+function waistGrid(entries: [waist: number, stock: number][]): SeedSizeStock[] {
+  return entries.map(([w, stockQty]) => ({ sizeInt: `W${w}`, stock: stockQty }));
+}
+
+/** International letter sizes only (no RU/EU) — the other "single grid filled" case. */
+function intGrid(entries: [size: string, stock: number][]): SeedSizeStock[] {
+  return entries.map(([size, stockQty]) => ({ sizeInt: size, stock: stockQty }));
+}
+
+/** EU shoe sizing is the only grid that applies to footwear. */
+function shoeGrid(entries: [eu: number, stock: number][]): SeedSizeStock[] {
+  return entries.map(([eu, stockQty]) => ({ sizeEu: String(eu), stock: stockQty }));
+}
+
+function oneSize(stockQty: number): SeedSizeStock[] {
+  return [{ sizeInt: 'One Size', stock: stockQty }];
 }
 
 export const SEED_PRODUCTS: SeedProduct[] = [
@@ -72,13 +109,25 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     title: 'Кожаная куртка косуха',
     category: 'Верхняя одежда',
     fit: 'Slim',
+    sizeFit: 'SMALL_FIT',
     price: 89900,
     oldPrice: 109900,
     description:
       'Куртка-косуха из плотной эко-кожи с металлической фурнитурой. Плотная подкладка, прямой силуэт с небольшим зауживанием. Подходит для прохладной погоды как самостоятельный верх или слой под пальто.',
     modelNote: 'На модели размер L, рост 184 см',
     colors: [
-      { name: 'Чёрный', hex: '#16161a', images: [IMG.leatherJacketProduct, IMG.leatherJacketModel], stock: stock(2, 6, 8, 5, 0) },
+      {
+        name: 'Чёрный',
+        hex: '#16161a',
+        images: [IMG.leatherJacketProduct, IMG.leatherJacketModel],
+        sizes: ruGrid([
+          ['46', 2],
+          ['48', 6],
+          ['50', 8],
+          ['52', 5],
+          ['54', 0],
+        ]),
+      },
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
@@ -90,18 +139,35 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       Застёжка: 'Молния',
       Капюшон: 'Нет',
       Карманы: '4',
+      Утеплитель: 'Без утеплителя',
+      'Температурный режим': 'До 0°C',
+      Влагозащита: 'Нет',
+      Уход: 'Протирать влажной тканью',
     },
   },
   {
     title: 'Джинсовая куртка классическая',
     category: 'Верхняя одежда',
     fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
     price: 42900,
     description:
       'Плотный деним средней плотности, усиленные швы, нагрудные карманы на кнопках. Универсальная куртка на весну и осень, хорошо сочетается с худи и рубашками.',
     modelNote: 'На модели размер M, рост 180 см',
     colors: [
-      { name: 'Синий деним', hex: '#3e5572', images: [IMG.denimJacketProduct, IMG.denimJacketModel], stock: stock(4, 9, 10, 7, 3) },
+      {
+        name: 'Синий деним',
+        hex: '#3e5572',
+        images: [IMG.denimJacketProduct, IMG.denimJacketModel],
+        sizes: ruGrid([
+          ['46', 4],
+          ['48', 9],
+          ['50', 10],
+          ['52', 7],
+          ['54', 3],
+          ['56', 0],
+        ]),
+      },
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
@@ -112,20 +178,47 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       Силуэт: 'Прямой',
       Застёжка: 'Кнопки',
       Карманы: '4',
+      Утеплитель: 'Без утеплителя',
+      'Температурный режим': 'До +5°C',
+      Влагозащита: 'Нет',
+      Уход: 'Машинная стирка 30°C',
     },
   },
   {
     title: 'Бомбер стёганый',
     category: 'Верхняя одежда',
     fit: 'Oversize',
+    sizeFit: 'BIG_FIT',
     price: 36900,
     oldPrice: 44900,
     description:
       'Лёгкий утеплённый бомбер на молнии с резинкой по низу и манжетам. Оверсайз-крой для свободной посадки поверх худи или свитшота.',
     modelNote: 'На модели размер XL, рост 186 см',
     colors: [
-      { name: 'Терракотовый', hex: '#9c5a35', images: [IMG.bomberProduct], stock: stock(0, 3, 6, 4, 2) },
-      { name: 'Чёрный', hex: '#141414', images: [IMG.quiltedJacketModel], stock: stock(3, 7, 9, 6, 0) },
+      {
+        name: 'Терракотовый',
+        hex: '#9c5a35',
+        images: [IMG.bomberProduct],
+        sizes: ruGrid([
+          ['46', 0],
+          ['48', 3],
+          ['50', 6],
+          ['52', 4],
+          ['54', 2],
+        ]),
+      },
+      {
+        name: 'Чёрный',
+        hex: '#141414',
+        images: [IMG.quiltedJacketModel],
+        sizes: ruGrid([
+          ['46', 3],
+          ['48', 7],
+          ['50', 9],
+          ['52', 6],
+          ['54', 0],
+        ]),
+      },
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
@@ -137,17 +230,34 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       Застёжка: 'Молния',
       Утеплитель: 'Синтепон',
       Капюшон: 'Нет',
+      'Температурный режим': 'До -5°C',
+      Влагозащита: 'Водоотталкивающая пропитка',
+      Уход: 'Машинная стирка 30°C',
     },
   },
   {
     title: 'Худи оверсайз базовое',
     category: 'Худи и свитшоты',
     fit: 'Oversize',
+    sizeFit: 'BIG_FIT',
     price: 24900,
     description:
       'Плотный футер трёхнитка с начёсом, капюшон на кулиске, карман-кенгуру. Свободный оверсайз-силуэт, рукав реглан.',
     modelNote: 'На модели размер L, рост 182 см',
-    colors: [{ name: 'Серый меланж', hex: '#8a8a8f', images: [IMG.hoodieGreyModel], stock: stock(5, 10, 12, 8, 4) }],
+    colors: [
+      {
+        name: 'Серый меланж',
+        hex: '#8a8a8f',
+        images: [IMG.hoodieGreyModel],
+        sizes: intGrid([
+          ['S', 5],
+          ['M', 10],
+          ['L', 12],
+          ['XL', 8],
+          ['2XL', 4],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Демисезон',
@@ -158,17 +268,34 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       Капюшон: 'Есть, на кулиске',
       Рукав: 'Реглан',
       'Плотность, г/м²': '320',
+      'Тип вязки/полотна': 'Футер 3-нитка с начёсом',
+      Горловина: 'С капюшоном',
+      Уход: 'Машинная стирка 30°C',
     },
   },
   {
     title: 'Свитшот базовый',
     category: 'Худи и свитшоты',
     fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
     price: 22900,
     description:
       'Классический свитшот без капюшона из плотного хлопкового футера. Прямой крой, рибана на манжетах и низе изделия.',
     modelNote: 'На модели размер M, рост 178 см',
-    colors: [{ name: 'Белый', hex: '#f2f1ec', images: [IMG.sweatshirtWhiteProduct], stock: stock(6, 10, 10, 6, 2) }],
+    colors: [
+      {
+        name: 'Белый',
+        hex: '#f2f1ec',
+        images: [IMG.sweatshirtWhiteProduct],
+        sizes: intGrid([
+          ['S', 6],
+          ['M', 10],
+          ['L', 10],
+          ['XL', 6],
+          ['2XL', 2],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Демисезон',
@@ -178,20 +305,46 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       Силуэт: 'Прямой',
       Капюшон: 'Нет',
       Рукав: 'Длинный',
+      'Тип вязки/полотна': 'Футер петля (без начёса)',
+      Горловина: 'Круглая',
+      Уход: 'Машинная стирка 30°C',
     },
   },
   {
     title: 'Свитшот оверсайз с принтом',
     category: 'Худи и свитшоты',
     fit: 'Oversize',
+    sizeFit: 'BIG_FIT',
     price: 19900,
     oldPrice: 26900,
     description:
       'Оверсайз-свитшот плотностью 320 г/м² с графичным принтом. Свободная посадка, двойная строчка по горловине.',
     modelNote: 'На модели размер L, рост 183 см',
     colors: [
-      { name: 'Чёрный с принтом', hex: '#161616', images: [IMG.graphicTeeModel], stock: stock(4, 8, 9, 5, 2) },
-      { name: 'Розовый пудровый', hex: '#d99a86', images: [IMG.pinkSweatshirtModel], stock: stock(2, 4, 4, 2, 0) },
+      {
+        name: 'Чёрный с принтом',
+        hex: '#161616',
+        images: [IMG.graphicTeeModel],
+        sizes: intGrid([
+          ['S', 4],
+          ['M', 8],
+          ['L', 9],
+          ['XL', 5],
+          ['2XL', 2],
+        ]),
+      },
+      {
+        name: 'Розовый пудровый',
+        hex: '#d99a86',
+        images: [IMG.pinkSweatshirtModel],
+        sizes: intGrid([
+          ['S', 2],
+          ['M', 4],
+          ['L', 4],
+          ['XL', 2],
+          ['2XL', 0],
+        ]),
+      },
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
@@ -202,74 +355,140 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       Силуэт: 'Oversize',
       'Плотность, г/м²': '320',
       Капюшон: 'Нет',
+      'Тип вязки/полотна': 'Футер 3-нитка с начёсом',
+      Горловина: 'Круглая',
+      Уход: 'Машинная стирка 30°C',
     },
   },
   {
     title: 'Джинсы зауженные',
     category: 'Брюки и джинсы',
     fit: 'Slim',
+    sizeFit: 'SMALL_FIT',
     price: 27900,
     description: 'Зауженные джинсы из плотного стрейч-денима. Средняя посадка, лёгкие потёртости, пять карманов.',
     modelNote: 'На модели размер 32, соответствует M',
-    colors: [{ name: 'Синий', hex: '#35526b', images: [IMG.jeansRackProduct], stock: stock(3, 8, 9, 5, 0) }],
+    colors: [
+      {
+        name: 'Синий',
+        hex: '#35526b',
+        images: [IMG.jeansRackProduct],
+        sizes: waistGrid([
+          [28, 3],
+          [30, 8],
+          [32, 9],
+          [34, 5],
+          [36, 0],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Круглогодичный',
     material: 'Деним',
     composition: '98% хлопок, 2% эластан',
     characteristics: {
-      Крой: 'Зауженный',
-      Посадка: 'Средняя',
-      Застёжка: 'Молния, пуговица',
+      'Посадка на талии': 'Средняя',
+      'Крой штанины': 'Зауженные',
+      'Плотность денима': 'Средний (9-13 oz)',
+      'Тип застёжки': 'Молния и пуговица',
+      Уход: 'Машинная стирка 30°C наизнанку',
     },
   },
   {
     title: 'Чиносы Slim',
     category: 'Брюки и джинсы',
     fit: 'Slim',
+    sizeFit: 'TRUE_TO_SIZE',
     price: 25900,
     description: 'Хлопковые чиносы зауженного кроя. Эластичный пояс, скрытые карманы, низ зафиксирован манжетой.',
     modelNote: 'На модели размер M, рост 179 см',
-    colors: [{ name: 'Хаки', hex: '#9c8558', images: [IMG.chinosModel], stock: stock(5, 9, 10, 6, 3) }],
+    colors: [
+      {
+        name: 'Хаки',
+        hex: '#9c8558',
+        images: [IMG.chinosModel],
+        sizes: ruGrid([
+          ['46', 5],
+          ['48', 9],
+          ['50', 10],
+          ['52', 6],
+          ['54', 3],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Круглогодичный',
     material: 'Хлопок',
     composition: '97% хлопок, 3% эластан',
     characteristics: {
-      Крой: 'Зауженный',
-      Посадка: 'Средняя',
+      'Посадка на талии': 'Средняя',
+      'Крой штанины': 'Зауженные',
       Пояс: 'Эластичный',
+      'Тип застёжки': 'Пуговица',
+      Уход: 'Машинная стирка 30°C',
     },
   },
   {
     title: 'Джинсы прямого кроя',
     category: 'Брюки и джинсы',
     fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
     price: 29900,
     description: 'Джинсы прямого силуэта из плотного денима без эластана. Классическая посадка на талии, пять карманов.',
     modelNote: 'На модели размер M, рост 181 см',
-    colors: [{ name: 'Тёмно-синий', hex: '#24344a', images: [IMG.outfitFlatlay], stock: stock(2, 6, 7, 4, 1) }],
+    colors: [
+      {
+        name: 'Тёмно-синий',
+        hex: '#24344a',
+        images: [IMG.outfitFlatlay],
+        sizes: waistGrid([
+          [30, 2],
+          [32, 6],
+          [34, 7],
+          [36, 4],
+          [38, 1],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Круглогодичный',
     material: 'Деним',
     composition: '100% хлопок (деним)',
     characteristics: {
-      Крой: 'Прямой',
-      Посадка: 'Средняя',
+      'Посадка на талии': 'Средняя',
+      'Крой штанины': 'Прямые',
+      'Плотность денима': 'Плотный (13+ oz)',
+      'Тип застёжки': 'Молния',
+      Уход: 'Машинная стирка 30°C наизнанку',
     },
   },
   {
     title: 'Костюм-тройка в клетку',
     category: 'Костюмы и рубашки',
     fit: 'Slim',
+    sizeFit: 'SMALL_FIT',
     price: 149900,
     oldPrice: 179900,
     description:
       'Костюм-тройка из шерстяной смеси в клетку: пиджак, жилет и брюки. Приталенный силуэт, подкладка из вискозы.',
     modelNote: 'На модели размер L, рост 185 см',
-    colors: [{ name: 'Синяя клетка', hex: '#3b4a63', images: [IMG.checkSuitModel], stock: stock(0, 2, 3, 2, 1) }],
+    colors: [
+      {
+        name: 'Синяя клетка',
+        hex: '#3b4a63',
+        images: [IMG.checkSuitModel],
+        sizes: ruGrid([
+          ['46', 0],
+          ['48', 2],
+          ['50', 3],
+          ['52', 2],
+          ['54', 1],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Демисезон',
@@ -280,16 +499,35 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Тип изделия': 'Пиджак, жилет, брюки',
       Застёжка: 'На пуговицы',
       Узор: 'Клетка',
+      Крой: 'Slim Fit',
+      'Количество пуговиц': '2 пуговицы',
+      Шлица: 'Две шлицы',
+      Подкладка: 'Полная подкладка',
+      Уход: 'Химчистка',
     },
   },
   {
     title: 'Костюм классический',
     category: 'Костюмы и рубашки',
     fit: 'Slim',
+    sizeFit: 'SMALL_FIT',
     price: 134900,
     description: 'Строгий классический костюм из смесовой шерсти. Приталенный крой, однобортный пиджак на две пуговицы.',
     modelNote: 'На модели размер M, рост 180 см',
-    colors: [{ name: 'Тёмно-синий', hex: '#1f2a44', images: [IMG.navySuitModel], stock: stock(1, 4, 5, 3, 1) }],
+    colors: [
+      {
+        name: 'Тёмно-синий',
+        hex: '#1f2a44',
+        images: [IMG.navySuitModel],
+        sizes: ruGrid([
+          ['46', 1],
+          ['48', 4],
+          ['50', 5],
+          ['52', 3],
+          ['54', 1],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Круглогодичный',
@@ -299,20 +537,59 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       Модель: 'Приталенная',
       'Тип изделия': 'Пиджак, брюки',
       Застёжка: 'На пуговицы, однобортный',
+      Крой: 'Slim Fit',
+      'Количество пуговиц': '2 пуговицы',
+      Шлица: 'Одна шлица',
+      Подкладка: 'Частичная подкладка',
+      Уход: 'Химчистка',
     },
   },
   {
     title: 'Рубашка классическая',
     category: 'Костюмы и рубашки',
     fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
     price: 18900,
     description:
       'Рубашка из хлопковой ткани с лёгким эффектом твила. Классический воротник, приталенный силуэт, не требует глажки.',
     modelNote: 'На модели размер M, рост 180 см',
     colors: [
-      { name: 'Серый', hex: '#6b6f76', images: [IMG.shirtsFolded], stock: stock(5, 10, 11, 7, 3) },
-      { name: 'Бордовый', hex: '#5b2430', images: [IMG.shirtsFolded], stock: stock(3, 7, 8, 4, 2) },
-      { name: 'Белый', hex: '#efece4', images: [IMG.shirtsFolded], stock: stock(6, 12, 12, 8, 4) },
+      {
+        name: 'Серый',
+        hex: '#6b6f76',
+        images: [IMG.shirtsFolded],
+        sizes: ruGrid([
+          ['46', 5],
+          ['48', 10],
+          ['50', 11],
+          ['52', 7],
+          ['54', 3],
+        ]),
+      },
+      {
+        name: 'Бордовый',
+        hex: '#5b2430',
+        images: [IMG.shirtsFolded],
+        sizes: ruGrid([
+          ['46', 3],
+          ['48', 7],
+          ['50', 8],
+          ['52', 4],
+          ['54', 2],
+        ]),
+      },
+      {
+        name: 'Белый',
+        hex: '#efece4',
+        images: [IMG.shirtsFolded],
+        sizes: ruGrid([
+          ['46', 6],
+          ['48', 12],
+          ['50', 12],
+          ['52', 8],
+          ['54', 4],
+        ]),
+      },
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
@@ -324,17 +601,42 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Тип воротника': 'Классический',
       'Тип рукава': 'Длинный',
       Узор: 'Однотонная',
+      'Плотность ткани, г/м²': '120-150',
+      Уход: 'Машинная стирка 40°C, не отбеливать',
     },
   },
   {
     title: 'Кроссовки повседневные',
     category: 'Обувь и аксессуары',
     fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
     price: 54900,
     description: 'Кроссовки из комбинированных материалов на амортизирующей подошве. Подходят для ежедневной носки.',
     colors: [
-      { name: 'Чёрный', hex: '#202020', images: [IMG.sneakerDark], stock: stock(0, 2, 4, 3, 0) },
-      { name: 'Бежевый', hex: '#c8a06c', images: [IMG.sneakerTan], stock: stock(1, 3, 5, 2, 1) },
+      {
+        name: 'Чёрный',
+        hex: '#202020',
+        images: [IMG.sneakerDark],
+        sizes: shoeGrid([
+          [40, 0],
+          [41, 2],
+          [42, 4],
+          [43, 3],
+          [44, 0],
+        ]),
+      },
+      {
+        name: 'Бежевый',
+        hex: '#c8a06c',
+        images: [IMG.sneakerTan],
+        sizes: shoeGrid([
+          [40, 1],
+          [41, 3],
+          [42, 5],
+          [43, 2],
+          [44, 1],
+        ]),
+      },
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
@@ -344,15 +646,25 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Материал верха': 'Текстиль, комбинированный',
       'Материал подошвы': 'ЭВА',
       Застёжка: 'Шнурки',
+      'Высота подошвы': 'Средняя (2-4 см)',
+      Уход: 'Протирать влажной тканью',
     },
   },
   {
     title: 'Кепка бейсболка',
     category: 'Обувь и аксессуары',
     fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
     price: 9900,
     description: 'Бейсболка из плотного хлопка с вышитым логотипом и регулировкой по размеру.',
-    colors: [{ name: 'Серый', hex: '#55565c', images: [IMG.capGrey], stock: stock(8, 8, 8, 8, 8) }],
+    colors: [
+      {
+        name: 'Серый',
+        hex: '#55565c',
+        images: [IMG.capGrey],
+        sizes: oneSize(8),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
     season: 'Лето',
@@ -360,15 +672,30 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     composition: '100% хлопок',
     characteristics: {
       Застёжка: 'Регулируемая, на липучке',
+      Уход: 'Ручная стирка',
     },
   },
   {
     title: 'Ботинки замшевые Челси',
     category: 'Обувь и аксессуары',
     fit: 'Regular',
+    sizeFit: 'SMALL_FIT',
     price: 47900,
     description: 'Ботинки Челси из натуральной замши на резинках, прошитая подошва.',
-    colors: [{ name: 'Коричневый', hex: '#5a3b25', images: [IMG.bootsFlatlay], stock: stock(2, 4, 4, 3, 0) }],
+    colors: [
+      {
+        name: 'Коричневый',
+        hex: '#5a3b25',
+        images: [IMG.bootsFlatlay],
+        sizes: shoeGrid([
+          [40, 2],
+          [41, 4],
+          [42, 4],
+          [43, 3],
+          [44, 0],
+        ]),
+      },
+    ],
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Демисезон',
@@ -377,17 +704,42 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Материал верха': 'Натуральная замша',
       'Материал подошвы': 'Резина, прошитая',
       Застёжка: 'Резинки по бокам',
+      'Высота подошвы': 'Низкая (до 2 см)',
+      Уход: 'Чистить щёткой для замши',
     },
   },
   {
     title: 'Кроссовки street',
     category: 'Обувь и аксессуары',
     fit: 'Oversize',
+    sizeFit: 'BIG_FIT',
     price: 44900,
     description: 'Массивные кроссовки в стиле street wear на высокой подошве, комбинация текстиля и замши.',
     colors: [
-      { name: 'Бирюзовый', hex: '#1f6f6f', images: [IMG.sneakerTeal], stock: stock(3, 5, 6, 3, 1) },
-      { name: 'Белый', hex: '#e8e3da', images: [IMG.sneakerWhiteOrange], stock: stock(2, 4, 5, 2, 0) },
+      {
+        name: 'Бирюзовый',
+        hex: '#1f6f6f',
+        images: [IMG.sneakerTeal],
+        sizes: shoeGrid([
+          [40, 3],
+          [41, 5],
+          [42, 6],
+          [43, 3],
+          [44, 1],
+        ]),
+      },
+      {
+        name: 'Белый',
+        hex: '#e8e3da',
+        images: [IMG.sneakerWhiteOrange],
+        sizes: shoeGrid([
+          [40, 2],
+          [41, 4],
+          [42, 5],
+          [43, 2],
+          [44, 0],
+        ]),
+      },
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
@@ -397,6 +749,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Материал верха': 'Текстиль, замша',
       'Материал подошвы': 'ЭВА, амортизирующая',
       Застёжка: 'Шнурки',
+      'Высота подошвы': 'Высокая (4+ см)',
+      Уход: 'Протирать влажной тканью',
     },
   },
 ];
