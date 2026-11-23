@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import type { ColorVariant, Fit, Product, Size, StockBySize } from '../../types';
 import { CATEGORIES, FITS, SIZES } from '../../types';
-import { storage } from '../../services/storage';
+import { api } from '../../services/api';
 import ImageField from './ImageField';
 
 interface ProductFormProps {
   product: Product | null;
   onClose: () => void;
+  onSaved: () => void;
 }
 
 function emptyStock(): StockBySize {
@@ -37,9 +38,10 @@ function emptyProduct(): Product {
   };
 }
 
-export default function ProductForm({ product, onClose }: ProductFormProps) {
+export default function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
   const [form, setForm] = useState<Product>(product ? structuredClone(product) : emptyProduct());
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const updateColor = (idx: number, patch: Partial<ColorVariant>) => {
     setForm((f) => ({
@@ -89,7 +91,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     setForm((f) => ({ ...f, colors: f.colors.filter((_, i) => i !== idx) }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.title.trim()) {
       setError('Укажите название товара');
       return;
@@ -102,14 +104,21 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
       ...form,
       colors: form.colors.map((c) => ({ ...c, images: c.images.filter((img) => img.trim()) })),
     };
-    const saved = storage.upsertProduct(cleaned);
-    if (!saved) {
-      setError(
-        'Не удалось сохранить: переполнено хранилище браузера. Удалите несколько изображений или используйте ссылки вместо загрузки файлов.'
-      );
-      return;
+    setSaving(true);
+    setError('');
+    try {
+      if (product) {
+        await api.updateProduct(product.id, cleaned);
+      } else {
+        await api.createProduct(cleaned);
+      }
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось сохранить товар.');
+    } finally {
+      setSaving(false);
     }
-    onClose();
   };
 
   return (
@@ -298,9 +307,10 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           <button
             onClick={handleSubmit}
             type="button"
-            className="rounded-full bg-graphite-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-graphite-800"
+            disabled={saving}
+            className="rounded-full bg-graphite-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-graphite-800 disabled:opacity-50"
           >
-            Сохранить
+            {saving ? 'Сохранение…' : 'Сохранить'}
           </button>
         </div>
       </div>

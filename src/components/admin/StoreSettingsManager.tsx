@@ -1,28 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, RotateCcw, Trash2 } from 'lucide-react';
-import type { PromoCode, StoreSettings, WorkingHours } from '../../types';
-import { useSettings, usePromoCodes } from '../../hooks/useStore';
-import { storage } from '../../services/storage';
+import type { StoreSettings, WorkingHours } from '../../types';
+import { useSettings, useAdminPromoCodes } from '../../hooks/useStore';
+import { api } from '../../services/api';
 import SafeImage from '../shared/SafeImage';
 import ImageField from './ImageField';
 
 export default function StoreSettingsManager() {
-  const [settings] = useSettings();
-  const [promoCodes] = usePromoCodes();
+  const [settings, refreshSettings] = useSettings();
+  const [promoCodes, refreshPromoCodes] = useAdminPromoCodes();
   const [form, setForm] = useState<StoreSettings>(settings);
   const [savedTick, setSavedTick] = useState(0);
   const [saveError, setSaveError] = useState('');
+  const [resetting, setResetting] = useState(false);
 
-  const save = (next: StoreSettings) => {
+  useEffect(() => setForm(settings), [settings]);
+
+  const save = async (next: StoreSettings) => {
     setForm(next);
-    const ok = storage.saveSettings(next);
-    if (ok) {
+    try {
+      await api.updateSettings(next);
       setSaveError('');
       setSavedTick((t) => t + 1);
-    } else {
-      setSaveError(
-        'Не удалось сохранить: переполнено хранилище браузера. Используйте более лёгкое изображение или ссылку вместо загрузки файла.'
-      );
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось сохранить настройки.');
     }
   };
 
@@ -31,28 +32,44 @@ export default function StoreSettingsManager() {
     save({ ...form, workingHours });
   };
 
-  const addPromo = () => {
-    const code: PromoCode = {
-      id: `promo${Date.now()}`,
-      code: 'NEWCODE',
-      discountPercent: 10,
-      active: true,
-    };
-    storage.savePromoCodes([...promoCodes, code]);
+  const addPromo = async () => {
+    try {
+      await api.createPromoCode({ code: 'NEWCODE', discountPercent: 10, active: true });
+      refreshPromoCodes();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось создать промокод.');
+    }
   };
 
-  const updatePromo = (id: string, patch: Partial<PromoCode>) => {
-    storage.savePromoCodes(promoCodes.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  const updatePromo = async (id: string, patch: Partial<{ code: string; discountPercent: number; active: boolean }>) => {
+    try {
+      await api.updatePromoCode(id, patch);
+      refreshPromoCodes();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось обновить промокод.');
+    }
   };
 
-  const deletePromo = (id: string) => {
-    storage.savePromoCodes(promoCodes.filter((p) => p.id !== id));
+  const deletePromo = async (id: string) => {
+    try {
+      await api.deletePromoCode(id);
+      refreshPromoCodes();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось удалить промокод.');
+    }
   };
 
-  const handleReset = () => {
-    if (confirm('Сбросить все данные к демо-состоянию? Это удалит ваши изменения товаров, заказов и настроек.')) {
-      storage.resetDemoData();
-      setForm(storage.getSettings());
+  const handleReset = async () => {
+    if (!confirm('Сбросить все данные к демо-состоянию? Это удалит ваши изменения товаров и настроек.')) return;
+    setResetting(true);
+    try {
+      await api.resetDemoData();
+      refreshSettings();
+      refreshPromoCodes();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось сбросить демо-данные.');
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -213,14 +230,14 @@ export default function StoreSettingsManager() {
           {promoCodes.map((promo) => (
             <div key={promo.id} className="flex items-center gap-2">
               <input
-                value={promo.code}
-                onChange={(e) => updatePromo(promo.id, { code: e.target.value.toUpperCase() })}
+                defaultValue={promo.code}
+                onBlur={(e) => updatePromo(promo.id, { code: e.target.value.toUpperCase() })}
                 className="input flex-1"
               />
               <input
                 type="number"
-                value={promo.discountPercent}
-                onChange={(e) => updatePromo(promo.id, { discountPercent: Number(e.target.value) })}
+                defaultValue={promo.discountPercent}
+                onBlur={(e) => updatePromo(promo.id, { discountPercent: Number(e.target.value) })}
                 className="input w-20 text-center"
               />
               <span className="text-sm text-graphite-500">%</span>
@@ -250,14 +267,15 @@ export default function StoreSettingsManager() {
           Демо-данные
         </h2>
         <p className="mb-3 text-sm text-graphite-500">
-          Восстановить исходный каталог, заказы и настройки — полезно перед презентацией.
+          Восстановить исходный каталог и настройки — полезно перед презентацией.
         </p>
         <button
           onClick={handleReset}
-          className="flex items-center gap-2 rounded-full border border-ember px-4 py-2 text-sm font-medium text-ember hover:bg-ember hover:text-white"
+          disabled={resetting}
+          className="flex items-center gap-2 rounded-full border border-ember px-4 py-2 text-sm font-medium text-ember hover:bg-ember hover:text-white disabled:opacity-50"
         >
           <RotateCcw size={15} />
-          Сбросить демо-данные
+          {resetting ? 'Сбрасываем…' : 'Сбросить демо-данные'}
         </button>
       </section>
     </div>

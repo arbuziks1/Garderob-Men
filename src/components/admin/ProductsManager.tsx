@@ -3,26 +3,36 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Product } from '../../types';
 import { isInStock, totalStock } from '../../types';
 import { useProducts } from '../../hooks/useStore';
-import { storage } from '../../services/storage';
+import { api } from '../../services/api';
 import SafeImage from '../shared/SafeImage';
 import ProductForm from './ProductForm';
 
 export default function ProductsManager() {
-  const [products] = useProducts();
+  const [products, refresh] = useProducts();
   const [editing, setEditing] = useState<Product | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleDelete = (product: Product) => {
-    if (confirm(`Удалить товар «${product.title}»?`)) {
-      storage.deleteProduct(product.id);
+  const handleDelete = async (product: Product) => {
+    if (!confirm(`Удалить товар «${product.title}»?`)) return;
+    try {
+      await api.deleteProduct(product.id);
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось удалить товар.');
     }
   };
 
-  const handlePriceChange = (product: Product, price: number) => {
-    storage.upsertProduct({ ...product, price });
+  const handlePriceChange = async (product: Product, price: number) => {
+    try {
+      await api.updateProduct(product.id, { ...product, price });
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось сохранить цену.');
+    }
   };
 
-  const toggleStock = (product: Product) => {
+  const toggleStock = async (product: Product) => {
     const inStock = isInStock(product);
     const updated: Product = {
       ...product,
@@ -33,7 +43,12 @@ export default function ProductsManager() {
           : { S: 5, M: 5, L: 5, XL: 5, XXL: 5 },
       })),
     };
-    storage.upsertProduct(updated);
+    try {
+      await api.updateProduct(product.id, updated);
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось обновить наличие.');
+    }
   };
 
   return (
@@ -48,6 +63,8 @@ export default function ProductsManager() {
           Добавить товар
         </button>
       </div>
+
+      {error && <p className="text-sm text-ember">{error}</p>}
 
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
         <div className="overflow-x-auto">
@@ -123,6 +140,7 @@ export default function ProductsManager() {
       {(editing || isCreating) && (
         <ProductForm
           product={editing}
+          onSaved={refresh}
           onClose={() => {
             setEditing(null);
             setIsCreating(false);

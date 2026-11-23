@@ -1,12 +1,13 @@
 import { useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, LogOut, Menu, Package, Settings, ShoppingCart, Store, X } from 'lucide-react';
+import { api } from '../../services/api';
 
 export type AdminTab = 'dashboard' | 'products' | 'orders' | 'settings';
 
 interface AdminLayoutProps {
   activeTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
-  onExit: () => void;
   children: ReactNode;
 }
 
@@ -17,8 +18,14 @@ const TABS: { id: AdminTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'settings', label: 'Настройки', icon: Settings },
 ];
 
-export default function AdminLayout({ activeTab, onTabChange, onExit, children }: AdminLayoutProps) {
+export default function AdminLayout({ activeTab, onTabChange, children }: AdminLayoutProps) {
+  const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const onExit = () => {
+    api.logoutAdmin();
+    navigate('/');
+  };
 
   const nav = (
     <nav className="flex flex-1 flex-col gap-1 p-3">

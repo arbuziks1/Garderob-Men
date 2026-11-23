@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { CartItem, DeliveryMethod, Order, PaymentMethod } from '../../types';
 import { formatPrice } from '../../utils/format';
-import { storage } from '../../services/storage';
+import { api, ApiError } from '../../services/api';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
 import PublicOfferModal from './PublicOfferModal';
 
@@ -36,8 +36,9 @@ export default function CheckoutForm({
   const [policyOpen, setPolicyOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (customerName.trim().length < 2) {
@@ -53,31 +54,37 @@ export default function CheckoutForm({
       return;
     }
 
-    const order: Order = {
-      id: `o${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      customerName: customerName.trim(),
-      phone: phone.replace(/[\s()-]/g, ''),
-      delivery,
-      payment,
-      items: items.map((i) => ({
-        productId: i.productId,
-        title: i.title,
-        colorName: i.colorName,
-        size: i.size,
-        price: i.price,
-        quantity: i.quantity,
-      })),
-      subtotal,
-      discount,
-      promoCode,
-      total,
-      status: 'Новый',
-      comment: comment.trim() || undefined,
-    };
-
-    storage.addOrder(order);
-    onComplete(order);
+    setSubmitting(true);
+    setError('');
+    try {
+      const order = await api.createOrder({
+        customerName: customerName.trim(),
+        phone: phone.replace(/[\s()-]/g, ''),
+        delivery,
+        payment,
+        items: items.map((i) => ({
+          productId: i.productId,
+          colorId: i.colorId,
+          size: i.size,
+          quantity: i.quantity,
+        })),
+        subtotal,
+        discount,
+        promoCode,
+        total,
+        comment: comment.trim() || undefined,
+        consentGiven: consent,
+      });
+      onComplete(order);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setError('Один из товаров уже разобрали — обновите корзину и попробуйте снова.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Не удалось оформить заказ. Попробуйте ещё раз.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -192,15 +199,17 @@ export default function CheckoutForm({
           <button
             type="button"
             onClick={onBack}
-            className="rounded-sm border border-stone-300 px-5 py-3 text-sm font-medium text-graphite-800"
+            disabled={submitting}
+            className="rounded-sm border border-stone-300 px-5 py-3 text-sm font-medium text-graphite-800 disabled:opacity-50"
           >
             Назад
           </button>
           <button
             type="submit"
-            className="flex-1 rounded-sm bg-ember py-3 font-display text-sm uppercase tracking-[0.15em] text-paper transition-colors hover:bg-ember-light"
+            disabled={submitting}
+            className="flex-1 rounded-sm bg-ember py-3 font-display text-sm uppercase tracking-[0.15em] text-paper transition-colors hover:bg-ember-light disabled:opacity-60"
           >
-            Подтвердить заказ
+            {submitting ? 'Оформляем…' : 'Подтвердить заказ'}
           </button>
         </div>
 

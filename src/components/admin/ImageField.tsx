@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
-import { fileToCompressedDataUrl } from '../../utils/image';
+import { api } from '../../services/api';
 import SafeImage from '../shared/SafeImage';
 
 interface ImageFieldProps {
@@ -20,10 +20,10 @@ export default function ImageField({ value, onChange, onRemove, placeholder }: I
     setError('');
     setLoading(true);
     try {
-      const dataUrl = await fileToCompressedDataUrl(file);
-      onChange(dataUrl);
-    } catch {
-      setError('Не удалось загрузить файл. Попробуйте другое изображение.');
+      const url = await api.uploadProductImage(file);
+      onChange(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить файл. Попробуйте другое изображение.');
     } finally {
       setLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -68,7 +68,7 @@ export default function ImageField({ value, onChange, onRemove, placeholder }: I
           </button>
         )}
       </div>
-      {loading && <p className="pl-12 text-xs text-graphite-500">Обработка изображения…</p>}
+      {loading && <p className="pl-12 text-xs text-graphite-500">Загрузка изображения…</p>}
       {error && <p className="pl-12 text-xs text-ember">{error}</p>}
     </div>
   );

@@ -13,11 +13,7 @@ import CartDrawer from '../components/storefront/CartDrawer';
 import CartToast from '../components/storefront/CartToast';
 import Footer from '../components/storefront/Footer';
 
-interface StorefrontPageProps {
-  onOpenAdmin: () => void;
-}
-
-export default function StorefrontPage({ onOpenAdmin }: StorefrontPageProps) {
+export default function StorefrontPage() {
   const [products] = useProducts();
   const [settings] = useSettings();
   const [activeCategory, setActiveCategory] = useState<Category | 'Все' | null>('Все');
@@ -61,7 +57,6 @@ export default function StorefrontPage({ onOpenAdmin }: StorefrontPageProps) {
           onCategoryChange={setActiveCategory}
           search={search}
           onSearchChange={setSearch}
-          onOpenAdmin={onOpenAdmin}
         />
         <MobileCategoryBar
           activeCategory={activeCategory}
@@ -82,7 +77,7 @@ export default function StorefrontPage({ onOpenAdmin }: StorefrontPageProps) {
         <ProductGrid products={filteredProducts} onSelect={setSelectedProduct} />
       </main>
 
-      <Footer settings={settings} onOpenAdmin={onOpenAdmin} />
+      <Footer settings={settings} />
 
       <AnimatePresence>
         {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}

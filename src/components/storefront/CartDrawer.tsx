@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { usePromoCodes } from '../../hooks/useStore';
+import { api } from '../../services/api';
 import { formatPrice } from '../../utils/format';
 import { EASE } from '../../utils/motion';
 import SafeImage from '../shared/SafeImage';
@@ -14,26 +14,34 @@ type Step = 'cart' | 'checkout' | 'success';
 
 export default function CartDrawer() {
   const { items, subtotal, itemCount, updateQuantity, removeItem, isDrawerOpen, closeDrawer, clearCart } = useCart();
-  const [promoCodes] = usePromoCodes();
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; percent: number } | null>(null);
   const [promoError, setPromoError] = useState('');
+  const [checkingPromo, setCheckingPromo] = useState(false);
   const [step, setStep] = useState<Step>('cart');
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
   const discount = appliedPromo ? Math.round((subtotal * appliedPromo.percent) / 100) : 0;
   const total = subtotal - discount;
 
-  const applyPromo = () => {
-    const match = promoCodes.find(
-      (p) => p.active && p.code.toLowerCase() === promoInput.trim().toLowerCase()
-    );
-    if (match) {
-      setAppliedPromo({ code: match.code, percent: match.discountPercent });
-      setPromoError('');
-    } else {
+  const applyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) return;
+    setCheckingPromo(true);
+    try {
+      const result = await api.checkPromoCode(code);
+      if (result.valid && result.discountPercent !== undefined) {
+        setAppliedPromo({ code: code.toUpperCase(), percent: result.discountPercent });
+        setPromoError('');
+      } else {
+        setAppliedPromo(null);
+        setPromoError('Промокод не найден или неактивен');
+      }
+    } catch {
       setAppliedPromo(null);
-      setPromoError('Промокод не найден или неактивен');
+      setPromoError('Не удалось проверить промокод. Попробуйте позже.');
+    } finally {
+      setCheckingPromo(false);
     }
   };
 
@@ -160,7 +168,8 @@ export default function CartDrawer() {
                   />
                   <button
                     onClick={applyPromo}
-                    className="rounded-md border border-graphite-950 px-3 py-2 text-sm font-medium text-graphite-950"
+                    disabled={checkingPromo}
+                    className="rounded-md border border-graphite-950 px-3 py-2 text-sm font-medium text-graphite-950 disabled:opacity-50"
                   >
                     Применить
                   </button>

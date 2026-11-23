@@ -1,19 +1,21 @@
 import { AlertTriangle, Package, ShoppingCart, Wallet } from 'lucide-react';
-import { useOrders, useProducts } from '../../hooks/useStore';
-import { SIZES } from '../../types';
+import { useAdminOrders, useProducts } from '../../hooks/useStore';
+import { ORDER_STATUS_LABEL, SIZES } from '../../types';
 import { formatDate, formatPrice } from '../../utils/format';
 
 const LOW_STOCK_THRESHOLD = 2;
 
 export default function Dashboard() {
   const [products] = useProducts();
-  const [orders] = useOrders();
+  const [orders] = useAdminOrders();
 
   const revenue = orders
-    .filter((o) => o.status !== 'Отменен')
+    .filter((o) => o.status !== 'CANCELLED')
     .reduce((sum, o) => sum + o.total, 0);
 
-  const activeOrders = orders.filter((o) => o.status === 'Новый' || o.status === 'Подтвержден').length;
+  const activeOrders = orders.filter(
+    (o) => o.status === 'PENDING_PAYMENT' || o.status === 'PAID' || o.status === 'SHIPPED'
+  ).length;
 
   const lowStockAlerts = products.flatMap((p) =>
     p.colors.flatMap((c) =>
@@ -63,7 +65,7 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-graphite-950">{formatPrice(o.total)}</p>
-                    <p className="text-xs text-graphite-500">{o.status}</p>
+                    <p className="text-xs text-graphite-500">{ORDER_STATUS_LABEL[o.status]}</p>
                   </div>
                 </div>
               ))}

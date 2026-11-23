@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  VERKHNYAYA_ODEZHDA
+  HUDI_I_SVITSHOTY
+  BRYUKI_I_DZHINSY
+  KOSTYUMY_I_RUBASHKI
+  OBUV_I_AKSESSUARY
+}
+
+enum Fit {
+  OVERSIZE
+  REGULAR
+  SLIM
+}
+
+enum DeliveryMethod {
+  SELF_PICKUP
+  DELIVERY
+}
+
+enum PaymentMethod {
+  KASPI_QR
+  TRANSFER
+  CASH
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CANCELLED
+  SHIPPED
+  DELIVERED
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  category    Category
+  fit         Fit
+  price       Int
+  oldPrice    Int?
+  description String
+  modelNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  colors     ProductColor[]
+  orderItems OrderItem[]
+}
+
+model ProductColor {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  name     String
+  hex      String
+  position Int    @default(0)
+
+  stockS   Int @default(0)
+  stockM   Int @default(0)
+  stockL   Int @default(0)
+  stockXl  Int @default(0)
+  stockXxl Int @default(0)
+
+  images ProductImage[]
+
+  @@index([productId])
+}
+
+model ProductImage {
+  id       String       @id @default(cuid())
+  colorId  String
+  color    ProductColor @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  url      String
+  position Int          @default(0)
+
+  @@index([colorId])
+}
+
+model Order {
+  id             String         @id @default(cuid())
+  customerName   String
+  phone          String
+  deliveryMethod DeliveryMethod
+  paymentMethod  PaymentMethod
+  subtotal       Int
+  discount       Int            @default(0)
+  promoCode      String?
+  total          Int
+  status         OrderStatus    @default(PENDING_PAYMENT)
+  comment        String?
+
+  consentGiven   Boolean   @default(false)
+  consentGivenAt DateTime?
+
+  paymentTransactionId String?
+  fiscalReceiptNumber  String?
+  fiscalReceiptUrl     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Nullable + SetNull so deleting a product later doesn't delete historical order rows
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  titleSnapshot     String
+  colorNameSnapshot String
+  size              String
+  priceSnapshot     Int
+  quantity          Int
+
+  @@index([orderId])
+}
+
+// Single-row table (always id = 1) holding the whole store's public settings
+model StoreSettings {
+  id            Int    @id @default(1)
+  storeName     String
+  address       String
+  workingHours  Json
+  whatsappPhone String
+  phoneDisplay  String
+  kaspiPayLink  String
+  legalName     String
+  businessId    String
+  instagramUrl  String
+  twoGisUrl     String
+  heroTitle     String
+  heroSubtitle  String
+  heroImage     String
+  heroCtaLabel  String
+}
+
+model PromoCode {
+  id              String  @id @default(cuid())
+  code            String  @unique
+  discountPercent Int
+  active          Boolean @default(true)
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { MessageCircle, Wallet } from 'lucide-react';
 import type { Order } from '../../types';
 import { useSettings } from '../../hooks/useStore';
@@ -53,6 +54,14 @@ export default function OrderSuccess({ order, onClose }: OrderSuccessProps) {
           Сумма к оплате: {formatPrice(order.total)} — введите её в приложении Kaspi.kz
         </p>
       )}
+
+      <Link
+        to={`/order/${order.id}`}
+        onClick={onClose}
+        className="text-sm font-medium text-graphite-600 underline underline-offset-2"
+      >
+        Отслеживать статус заказа
+      </Link>
 
       <button onClick={onClose} className="text-sm font-medium text-graphite-600 underline underline-offset-2">
         Продолжить покупки
