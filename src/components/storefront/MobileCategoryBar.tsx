@@ -12,6 +12,7 @@ interface MobileCategoryBarProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   priceCeiling: number;
+  availableSizes: string[];
 }
 
 export default function MobileCategoryBar({
@@ -20,6 +21,7 @@ export default function MobileCategoryBar({
   filters,
   onFiltersChange,
   priceCeiling,
+  availableSizes,
 }: MobileCategoryBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const active = hasActiveFilters(filters, priceCeiling);
@@ -63,6 +65,7 @@ export default function MobileCategoryBar({
         filters={filters}
         onChange={onFiltersChange}
         priceCeiling={priceCeiling}
+        availableSizes={availableSizes}
       />
     </>
   );

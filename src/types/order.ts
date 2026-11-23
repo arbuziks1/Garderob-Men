@@ -16,6 +16,7 @@ export type PaymentMethod = 'Kaspi QR' | 'Перевод' | 'Наличными 
 
 export interface OrderItem {
   productId?: string;
+  sku: string;
   title: string;
   colorName: string;
   size: string;

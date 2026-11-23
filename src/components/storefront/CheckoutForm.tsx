@@ -65,7 +65,8 @@ export default function CheckoutForm({
         items: items.map((i) => ({
           productId: i.productId,
           colorId: i.colorId,
-          size: i.size,
+          sizeStockId: i.sizeStockId,
+          sizeLabel: i.sizeLabel,
           quantity: i.quantity,
         })),
         subtotal,

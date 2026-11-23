@@ -17,8 +17,8 @@ interface CartContextValue {
   itemCount: number;
   subtotal: number;
   addItem: (item: CartItem) => void;
-  updateQuantity: (productId: string, colorId: string, size: string, quantity: number) => void;
-  removeItem: (productId: string, colorId: string, size: string) => void;
+  updateQuantity: (productId: string, colorId: string, sizeStockId: string, quantity: number) => void;
+  removeItem: (productId: string, colorId: string, sizeStockId: string) => void;
   clearCart: () => void;
   isDrawerOpen: boolean;
   openDrawer: () => void;
@@ -50,7 +50,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = (newItem: CartItem) => {
     setItems((prev) => {
       const idx = prev.findIndex(
-        (i) => i.productId === newItem.productId && i.colorId === newItem.colorId && i.size === newItem.size
+        (i) =>
+          i.productId === newItem.productId &&
+          i.colorId === newItem.colorId &&
+          i.sizeStockId === newItem.sizeStockId
       );
       if (idx === -1) return [...prev, newItem];
       const next = [...prev];
@@ -58,14 +61,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       next[idx] = { ...next[idx], quantity: combinedQty };
       return next;
     });
-    setToast(`Добавлено в корзину — Размер ${newItem.size}`);
+    setToast(`Добавлено в корзину — Размер ${newItem.sizeLabel}`);
   };
 
-  const updateQuantity = (productId: string, colorId: string, size: string, quantity: number) => {
+  const updateQuantity = (productId: string, colorId: string, sizeStockId: string, quantity: number) => {
     setItems((prev) =>
       prev
         .map((i) =>
-          i.productId === productId && i.colorId === colorId && i.size === size
+          i.productId === productId && i.colorId === colorId && i.sizeStockId === sizeStockId
             ? { ...i, quantity: Math.max(1, Math.min(quantity, i.maxStock)) }
             : i
         )
@@ -73,9 +76,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const removeItem = (productId: string, colorId: string, size: string) => {
+  const removeItem = (productId: string, colorId: string, sizeStockId: string) => {
     setItems((prev) =>
-      prev.filter((i) => !(i.productId === productId && i.colorId === colorId && i.size === size))
+      prev.filter((i) => !(i.productId === productId && i.colorId === colorId && i.sizeStockId === sizeStockId))
     );
   };
 

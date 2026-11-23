@@ -9,6 +9,7 @@ interface MobileFilterSheetProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   priceCeiling: number;
+  availableSizes: string[];
 }
 
 export default function MobileFilterSheet({
@@ -17,6 +18,7 @@ export default function MobileFilterSheet({
   filters,
   onChange,
   priceCeiling,
+  availableSizes,
 }: MobileFilterSheetProps) {
   const active = hasActiveFilters(filters, priceCeiling);
 
@@ -47,7 +49,7 @@ export default function MobileFilterSheet({
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
-              <FilterControls filters={filters} onChange={onChange} priceCeiling={priceCeiling} />
+              <FilterControls filters={filters} onChange={onChange} priceCeiling={priceCeiling} availableSizes={availableSizes} />
             </div>
 
             <div className="flex gap-2 border-t border-stone-200 p-5">

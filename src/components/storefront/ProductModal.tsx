@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import type { Product, Size } from '../../types';
-import { SIZES } from '../../types';
+import type { Product, SizeStock } from '../../types';
+import { SIZE_FIT_LABEL } from '../../types';
 import { formatPrice } from '../../utils/format';
 import { EASE } from '../../utils/motion';
 import { useCart } from '../../contexts/CartContext';
@@ -13,38 +13,70 @@ interface ProductModalProps {
   onClose: () => void;
 }
 
+type Grid = 'ru' | 'eu' | 'int';
+
+const GRID_LABEL: Record<Grid, string> = { ru: 'RU', eu: 'EU', int: 'INT' };
+
+function gridValue(row: SizeStock, grid: Grid): string | undefined {
+  if (grid === 'ru') return row.sizeRu;
+  if (grid === 'eu') return row.sizeEu;
+  return row.sizeInt;
+}
+
+function availableGrids(sizes: SizeStock[]): Grid[] {
+  return (['ru', 'eu', 'int'] as Grid[]).filter((g) => sizes.some((s) => gridValue(s, g)?.trim()));
+}
+
+function labelFor(row: SizeStock, grid: Grid): string {
+  return gridValue(row, grid)?.trim() || row.sizeRu || row.sizeEu || row.sizeInt || '';
+}
+
 export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [colorIdx, setColorIdx] = useState(0);
   const [imgIdx, setImgIdx] = useState(0);
-  const [size, setSize] = useState<Size | null>(null);
+  const [grid, setGrid] = useState<Grid | null>(null);
+  const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
 
   const color = product.colors[colorIdx];
   const image = color.images[imgIdx] ?? color.images[0];
 
+  const grids = useMemo(() => availableGrids(color.sizes), [color]);
+  const activeGrid: Grid | null = grid && grids.includes(grid) ? grid : (grids[0] ?? null);
+
+  const inStockSizes = color.sizes.filter((s) => s.stock > 0);
+  const allOutOfStock = inStockSizes.length === 0;
+
+  const selectedRow = color.sizes.find((s) => s.id === selectedSizeId) ?? null;
+  const canAdd = selectedRow !== null && selectedRow.stock > 0;
+
   const handleColorChange = (idx: number) => {
     setColorIdx(idx);
     setImgIdx(0);
-    setSize(null);
+    setGrid(null);
+    setSelectedSizeId(null);
     setAdded(false);
   };
 
-  const stockForSize = size ? color.stock[size] : 0;
-  const canAdd = size !== null && stockForSize > 0;
+  const handleSelectSize = (row: SizeStock) => {
+    setSelectedSizeId(row.id);
+    setAdded(false);
+  };
 
   const handleAdd = () => {
-    if (!canAdd || !size) return;
+    if (!canAdd || !selectedRow || !activeGrid) return;
     addItem({
       productId: product.id,
       title: product.title,
       image,
       colorId: color.id,
       colorName: color.name,
-      size,
+      sizeStockId: selectedRow.id,
+      sizeLabel: labelFor(selectedRow, activeGrid),
       price: product.price,
       quantity: 1,
-      maxStock: stockForSize,
+      maxStock: selectedRow.stock,
     });
     setAdded(true);
   };
@@ -99,6 +131,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           <div>
             <p className="text-xs uppercase tracking-wide text-graphite-500">{product.category}</p>
             <h2 className="font-display text-xl font-semibold text-graphite-950">{product.title}</h2>
+            <p className="mt-0.5 text-xs text-graphite-400">Артикул: {product.sku}</p>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="text-lg font-semibold text-graphite-950">{formatPrice(product.price)}</span>
               {product.oldPrice && (
@@ -154,51 +187,78 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
             </div>
           </div>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-graphite-600">Размер</p>
-            <div className="flex flex-wrap gap-2">
-              {SIZES.map((s) => {
-                const stockQty = color.stock[s];
-                const outOfStock = stockQty === 0;
-                return (
-                  <button
-                    key={s}
-                    disabled={outOfStock}
-                    onClick={() => {
-                      setSize(s);
-                      setAdded(false);
-                    }}
-                    className={`relative h-10 min-w-10 rounded-md border px-2 text-sm font-medium transition-colors ${
-                      outOfStock
-                        ? 'cursor-not-allowed border-stone-200 text-stone-300 line-through'
-                        : size === s
-                          ? 'border-graphite-950 bg-graphite-950 text-white'
-                          : 'border-stone-300 text-graphite-800 hover:border-graphite-600'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
+          {allOutOfStock ? (
+            <div className="rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 text-center text-sm font-medium text-graphite-500">
+              Нет в наличии
             </div>
-            {size && (
-              <p className="mt-1.5 text-xs text-graphite-500">
-                {stockForSize > 0 ? `В наличии: ${stockForSize} шт.` : 'Нет в наличии в этом размере'}
-              </p>
-            )}
-          </div>
+          ) : (
+            <>
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-graphite-600">Размер</p>
+                  {grids.length > 1 && (
+                    <div className="flex gap-1 rounded-full bg-stone-100 p-0.5">
+                      {grids.map((g) => (
+                        <button
+                          key={g}
+                          onClick={() => {
+                            setGrid(g);
+                            setSelectedSizeId(null);
+                            setAdded(false);
+                          }}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide transition-colors ${
+                            activeGrid === g ? 'bg-graphite-950 text-white' : 'text-graphite-600 hover:text-graphite-950'
+                          }`}
+                        >
+                          {GRID_LABEL[g]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {inStockSizes.map((row) => {
+                    const isSelected = selectedSizeId === row.id;
+                    const label = activeGrid ? labelFor(row, activeGrid) : row.sizeRu ?? row.sizeEu ?? row.sizeInt;
+                    return (
+                      <button
+                        key={row.id}
+                        onClick={() => handleSelectSize(row)}
+                        className={`relative h-10 min-w-10 rounded-md border px-2 text-sm font-medium transition-colors ${
+                          isSelected
+                            ? 'border-graphite-950 bg-graphite-950 text-white'
+                            : 'border-stone-300 text-graphite-800 hover:border-graphite-600'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedRow && (
+                  <p className="mt-1.5 text-xs text-graphite-500">В наличии: {selectedRow.stock} шт.</p>
+                )}
+              </div>
 
-          <button
-            onClick={handleAdd}
-            disabled={!canAdd}
-            className={`mt-2 rounded-sm py-3 text-center font-display text-sm uppercase tracking-[0.15em] transition-colors ${
-              canAdd
-                ? 'bg-ember text-paper hover:bg-ember-light'
-                : 'cursor-not-allowed bg-stone-200 text-stone-400'
-            }`}
-          >
-            {added ? 'Добавлено в корзину ✓' : 'Добавить в корзину'}
-          </button>
+              {product.sizeFit && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                  {SIZE_FIT_LABEL[product.sizeFit]}
+                </div>
+              )}
+
+              <button
+                onClick={handleAdd}
+                disabled={!canAdd}
+                className={`mt-2 rounded-sm py-3 text-center font-display text-sm uppercase tracking-[0.15em] transition-colors ${
+                  canAdd
+                    ? 'bg-ember text-paper hover:bg-ember-light'
+                    : 'cursor-not-allowed bg-stone-200 text-stone-400'
+                }`}
+              >
+                {added ? 'Добавлено в корзину ✓' : 'Добавить в корзину'}
+              </button>
+            </>
+          )}
         </div>
       </motion.div>
     </div>

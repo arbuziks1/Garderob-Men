@@ -99,7 +99,7 @@ export default function OrdersManager() {
                       {order.items.map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between px-3 py-2 text-sm">
                           <span className="text-graphite-800">
-                            {item.title} · {item.colorName} · {item.size} × {item.quantity}
+                            {item.sku} · {item.title} · {item.colorName} · {item.size} × {item.quantity}
                           </span>
                           <span className="font-medium text-graphite-950">{formatPrice(item.price * item.quantity)}</span>
                         </div>

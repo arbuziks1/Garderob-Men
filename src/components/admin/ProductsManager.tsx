@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Product } from '../../types';
 import { isInStock, totalStock } from '../../types';
@@ -12,6 +12,15 @@ export default function ProductsManager() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(
+      (p) => p.sku.toLowerCase().includes(q) || p.title.toLowerCase().includes(q)
+    );
+  }, [products, search]);
 
   const handleDelete = async (product: Product) => {
     if (!confirm(`Удалить товар «${product.title}»?`)) return;
@@ -38,9 +47,7 @@ export default function ProductsManager() {
       ...product,
       colors: product.colors.map((c) => ({
         ...c,
-        stock: inStock
-          ? { S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
-          : { S: 5, M: 5, L: 5, XL: 5, XXL: 5 },
+        sizes: c.sizes.map((s) => ({ ...s, stock: inStock ? 0 : 5 })),
       })),
     };
     try {
@@ -64,14 +71,22 @@ export default function ProductsManager() {
         </button>
       </div>
 
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Поиск по артикулу или названию…"
+        className="w-full max-w-sm rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-graphite-950 focus:outline-none"
+      />
+
       {error && <p className="text-sm text-ember">{error}</p>}
 
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[820px] text-left text-sm">
             <thead className="border-b border-stone-200 bg-stone-50 text-xs uppercase tracking-wide text-graphite-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Товар</th>
+                <th className="px-4 py-3 font-medium">Артикул</th>
                 <th className="px-4 py-3 font-medium">Категория</th>
                 <th className="px-4 py-3 font-medium">Цена</th>
                 <th className="px-4 py-3 font-medium">Остаток</th>
@@ -80,7 +95,7 @@ export default function ProductsManager() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {products.map((product) => (
+              {filtered.map((product) => (
                 <tr key={product.id}>
                   <td className="flex items-center gap-3 px-4 py-3">
                     <div className="h-12 w-10 shrink-0 overflow-hidden rounded-md bg-stone-100">
@@ -92,6 +107,7 @@ export default function ProductsManager() {
                     </div>
                     <span className="font-medium text-graphite-950">{product.title}</span>
                   </td>
+                  <td className="px-4 py-3 font-mono text-xs text-graphite-500">{product.sku}</td>
                   <td className="px-4 py-3 text-graphite-600">{product.category}</td>
                   <td className="px-4 py-3">
                     <input
@@ -132,6 +148,13 @@ export default function ProductsManager() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-graphite-500">
+                    Ничего не найдено
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

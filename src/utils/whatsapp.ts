@@ -13,7 +13,7 @@ export function buildWhatsAppOrderMessage(order: Order): string {
     'Состав заказа:',
     ...order.items.map(
       (item) =>
-        `• ${item.title} (${item.colorName}, размер ${item.size}) × ${item.quantity} — ${formatPrice(
+        `• ${item.sku} ${item.title} (${item.colorName}, размер ${item.size}) × ${item.quantity} — ${formatPrice(
           item.price * item.quantity
         )}`
     ),

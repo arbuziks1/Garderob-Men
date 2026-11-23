@@ -5,11 +5,18 @@ export type Category =
   | 'Костюмы и рубашки'
   | 'Обувь и аксессуары';
 
-export type Size = 'S' | 'M' | 'L' | 'XL' | 'XXL';
-
 export type Fit = 'Oversize' | 'Regular' | 'Slim';
 
-export const SIZES: Size[] = ['S', 'M', 'L', 'XL', 'XXL'];
+export type SizeFit = 'SMALL_FIT' | 'TRUE_TO_SIZE' | 'BIG_FIT';
+
+export const SIZE_FIT_LABEL: Record<SizeFit, string> = {
+  SMALL_FIT: 'Маломерит (рекомендуем брать на размер больше)',
+  TRUE_TO_SIZE: 'Идёт размер в размер (True to size)',
+  BIG_FIT: 'Большемерит (свободная посадка, можно на размер меньше)',
+};
+
+export const SIZE_FITS: SizeFit[] = ['SMALL_FIT', 'TRUE_TO_SIZE', 'BIG_FIT'];
+
 export const FITS: Fit[] = ['Oversize', 'Regular', 'Slim'];
 export const CATEGORIES: Category[] = [
   'Верхняя одежда',
@@ -19,12 +26,12 @@ export const CATEGORIES: Category[] = [
   'Обувь и аксессуары',
 ];
 
-export interface StockBySize {
-  S: number;
-  M: number;
-  L: number;
-  XL: number;
-  XXL: number;
+export interface SizeStock {
+  id: string;
+  sizeRu?: string;
+  sizeEu?: string;
+  sizeInt?: string;
+  stock: number;
 }
 
 export interface ColorVariant {
@@ -32,14 +39,16 @@ export interface ColorVariant {
   name: string;
   hex: string;
   images: string[];
-  stock: StockBySize;
+  sizes: SizeStock[];
 }
 
 export interface Product {
   id: string;
+  sku: string;
   title: string;
   category: Category;
   fit: Fit;
+  sizeFit?: SizeFit;
   price: number;
   oldPrice?: number;
   description: string;
@@ -56,8 +65,7 @@ export interface Product {
 
 export function totalStock(product: Product): number {
   return product.colors.reduce(
-    (sum, color) =>
-      sum + Object.values(color.stock).reduce((s, n) => s + n, 0),
+    (sum, color) => sum + color.sizes.reduce((s, row) => s + row.stock, 0),
     0
   );
 }

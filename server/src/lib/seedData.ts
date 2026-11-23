@@ -667,7 +667,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     ],
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
-    season: 'Лето',
+    season: 'Весна-Лето',
     material: 'Хлопок',
     composition: '100% хлопок',
     characteristics: {

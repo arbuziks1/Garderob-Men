@@ -1,9 +1,12 @@
-import type { Fit, Size } from '../../types';
-import { FITS, SIZES } from '../../types';
+import type { Fit, SizeFit } from '../../types';
+import { FITS, SIZE_FIT_LABEL, SIZE_FITS } from '../../types';
+import { SEASON_OPTIONS } from '../../data/categoryCharacteristics';
 
 export interface FilterState {
-  sizes: Size[];
+  sizes: string[];
   fits: Fit[];
+  seasons: string[];
+  sizeFits: SizeFit[];
   maxPrice: number;
   inStockOnly: boolean;
 }
@@ -12,20 +15,26 @@ interface FilterControlsProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   priceCeiling: number;
+  availableSizes: string[];
 }
 
 export function hasActiveFilters(filters: FilterState, priceCeiling: number): boolean {
   return (
-    filters.sizes.length > 0 || filters.fits.length > 0 || filters.maxPrice < priceCeiling || filters.inStockOnly
+    filters.sizes.length > 0 ||
+    filters.fits.length > 0 ||
+    filters.seasons.length > 0 ||
+    filters.sizeFits.length > 0 ||
+    filters.maxPrice < priceCeiling ||
+    filters.inStockOnly
   );
 }
 
 export function resetFilters(priceCeiling: number): FilterState {
-  return { sizes: [], fits: [], maxPrice: priceCeiling, inStockOnly: false };
+  return { sizes: [], fits: [], seasons: [], sizeFits: [], maxPrice: priceCeiling, inStockOnly: false };
 }
 
-export default function FilterControls({ filters, onChange, priceCeiling }: FilterControlsProps) {
-  const toggleSize = (size: Size) => {
+export default function FilterControls({ filters, onChange, priceCeiling, availableSizes }: FilterControlsProps) {
+  const toggleSize = (size: string) => {
     const sizes = filters.sizes.includes(size)
       ? filters.sizes.filter((s) => s !== size)
       : [...filters.sizes, size];
@@ -37,28 +46,44 @@ export default function FilterControls({ filters, onChange, priceCeiling }: Filt
     onChange({ ...filters, fits });
   };
 
+  const toggleSeason = (season: string) => {
+    const seasons = filters.seasons.includes(season)
+      ? filters.seasons.filter((s) => s !== season)
+      : [...filters.seasons, season];
+    onChange({ ...filters, seasons });
+  };
+
+  const toggleSizeFit = (sizeFit: SizeFit) => {
+    const sizeFits = filters.sizeFits.includes(sizeFit)
+      ? filters.sizeFits.filter((f) => f !== sizeFit)
+      : [...filters.sizeFits, sizeFit];
+    onChange({ ...filters, sizeFits });
+  };
+
   const active = hasActiveFilters(filters, priceCeiling);
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Размер</p>
-        <div className="flex flex-wrap gap-2">
-          {SIZES.map((size) => (
-            <button
-              key={size}
-              onClick={() => toggleSize(size)}
-              className={`h-9 min-w-9 rounded-sm border px-2 text-sm font-medium transition-colors ${
-                filters.sizes.includes(size)
-                  ? 'border-graphite-950 bg-graphite-950 text-white'
-                  : 'border-stone-300 text-graphite-800 hover:border-graphite-600'
-              }`}
-            >
-              {size}
-            </button>
-          ))}
+      {availableSizes.length > 0 && (
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Размер</p>
+          <div className="flex flex-wrap gap-2">
+            {availableSizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => toggleSize(size)}
+                className={`h-9 min-w-9 rounded-sm border px-2 text-sm font-medium transition-colors ${
+                  filters.sizes.includes(size)
+                    ? 'border-graphite-950 bg-graphite-950 text-white'
+                    : 'border-stone-300 text-graphite-800 hover:border-graphite-600'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Посадка</p>
@@ -75,6 +100,44 @@ export default function FilterControls({ filters, onChange, priceCeiling }: Filt
             >
               {fit}
             </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Сезон</p>
+        <div className="flex flex-wrap gap-2">
+          {SEASON_OPTIONS.map((season) => (
+            <button
+              key={season}
+              onClick={() => toggleSeason(season)}
+              className={`rounded-sm border px-3 py-1.5 text-sm font-medium transition-colors ${
+                filters.seasons.includes(season)
+                  ? 'border-graphite-950 bg-graphite-950 text-white'
+                  : 'border-stone-300 text-graphite-800 hover:border-graphite-600'
+              }`}
+            >
+              {season}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+          Соответствие размеру
+        </p>
+        <div className="flex flex-col gap-2">
+          {SIZE_FITS.map((sf) => (
+            <label key={sf} className="flex cursor-pointer items-center gap-2 text-sm text-graphite-800">
+              <input
+                type="checkbox"
+                checked={filters.sizeFits.includes(sf)}
+                onChange={() => toggleSizeFit(sf)}
+                className="h-4 w-4 accent-graphite-950"
+              />
+              {SIZE_FIT_LABEL[sf]}
+            </label>
           ))}
         </div>
       </div>

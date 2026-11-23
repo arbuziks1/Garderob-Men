@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import type { Product, Size } from '../../types';
-import { isInStock, SIZES } from '../../types';
+import type { Product } from '../../types';
+import { isInStock } from '../../types';
+import { sortSizeLabels } from '../../data/sizeGrids';
 import { formatPrice } from '../../utils/format';
 import { EASE } from '../../utils/motion';
 import SafeImage from '../shared/SafeImage';
@@ -10,14 +11,26 @@ interface ProductCardProps {
   onClick: () => void;
 }
 
-function sizeAvailable(product: Product, size: Size): boolean {
-  return product.colors.some((c) => c.stock[size] > 0);
+/** One badge per distinct size label across all colors (prefers the INT letter grid for
+ *  a compact label, falls back to RU/EU) — available if ANY color has stock in that size. */
+function sizeBadges(product: Product): { label: string; available: boolean }[] {
+  const byLabel = new Map<string, boolean>();
+  for (const color of product.colors) {
+    for (const s of color.sizes) {
+      const label = s.sizeInt ?? s.sizeRu ?? s.sizeEu;
+      if (!label) continue;
+      byLabel.set(label, (byLabel.get(label) ?? false) || s.stock > 0);
+    }
+  }
+  const labels = sortSizeLabels([...byLabel.keys()]);
+  return labels.map((label) => ({ label, available: byLabel.get(label) ?? false }));
 }
 
 export default function ProductCard({ product, onClick }: ProductCardProps) {
   const cover = product.colors[0]?.images[0];
   const secondary = product.colors[0]?.images[1];
   const inStock = isInStock(product);
+  const badges = sizeBadges(product);
 
   return (
     <motion.button
@@ -58,15 +71,12 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
           {product.title}
         </p>
 
-        <div className="flex gap-1.5 pt-0.5 text-[11px] font-medium tracking-wide">
-          {SIZES.map((size) => {
-            const available = sizeAvailable(product, size);
-            return (
-              <span key={size} className={available ? 'text-graphite-600' : 'text-stone-300 line-through'}>
-                {size}
-              </span>
-            );
-          })}
+        <div className="flex flex-wrap gap-1.5 pt-0.5 text-[11px] font-medium tracking-wide">
+          {badges.map(({ label, available }) => (
+            <span key={label} className={available ? 'text-graphite-600' : 'text-stone-300 line-through'}>
+              {label}
+            </span>
+          ))}
         </div>
 
         <div className="mt-auto flex items-baseline gap-2 pt-1.5 tabular-nums">

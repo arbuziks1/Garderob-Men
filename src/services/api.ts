@@ -86,7 +86,7 @@ export interface CreateOrderInput {
   phone: string;
   delivery: string;
   payment: string;
-  items: { productId: string; colorId: string; size: string; quantity: number }[];
+  items: { productId: string; colorId: string; sizeStockId: string; sizeLabel: string; quantity: number }[];
   subtotal: number;
   discount: number;
   promoCode?: string;

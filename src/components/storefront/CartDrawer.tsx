@@ -113,26 +113,30 @@ export default function CartDrawer() {
               ) : (
                 <div className="flex flex-col gap-4">
                   {items.map((item) => (
-                    <div key={`${item.productId}-${item.colorId}-${item.size}`} className="flex gap-3">
+                    <div key={`${item.productId}-${item.colorId}-${item.sizeStockId}`} className="flex gap-3">
                       <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-stone-100">
                         <SafeImage src={item.image} alt={item.title} className="h-full w-full object-cover" />
                       </div>
                       <div className="flex flex-1 flex-col">
                         <p className="text-sm font-medium text-graphite-950">{item.title}</p>
                         <p className="text-xs text-graphite-500">
-                          {item.colorName} · Размер {item.size}
+                          {item.colorName} · Размер {item.sizeLabel}
                         </p>
                         <div className="mt-auto flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => updateQuantity(item.productId, item.colorId, item.size, item.quantity - 1)}
+                              onClick={() =>
+                                updateQuantity(item.productId, item.colorId, item.sizeStockId, item.quantity - 1)
+                              }
                               className="flex h-6 w-6 items-center justify-center rounded-full border border-stone-300"
                             >
                               <Minus size={12} />
                             </button>
                             <span className="w-4 text-center text-sm">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.productId, item.colorId, item.size, item.quantity + 1)}
+                              onClick={() =>
+                                updateQuantity(item.productId, item.colorId, item.sizeStockId, item.quantity + 1)
+                              }
                               disabled={item.quantity >= item.maxStock}
                               className="flex h-6 w-6 items-center justify-center rounded-full border border-stone-300 disabled:opacity-30"
                             >
@@ -145,7 +149,7 @@ export default function CartDrawer() {
                         </div>
                       </div>
                       <button
-                        onClick={() => removeItem(item.productId, item.colorId, item.size)}
+                        onClick={() => removeItem(item.productId, item.colorId, item.sizeStockId)}
                         className="self-start text-stone-400 hover:text-ember"
                         aria-label="Удалить"
                       >

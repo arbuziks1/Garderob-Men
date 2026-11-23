@@ -1,6 +1,6 @@
 import { AlertTriangle, Package, ShoppingCart, Wallet } from 'lucide-react';
 import { useAdminOrders, useProducts } from '../../hooks/useStore';
-import { ORDER_STATUS_LABEL, SIZES } from '../../types';
+import { ORDER_STATUS_LABEL } from '../../types';
 import { formatDate, formatPrice } from '../../utils/format';
 
 const LOW_STOCK_THRESHOLD = 2;
@@ -19,12 +19,14 @@ export default function Dashboard() {
 
   const lowStockAlerts = products.flatMap((p) =>
     p.colors.flatMap((c) =>
-      SIZES.filter((s) => c.stock[s] > 0 && c.stock[s] <= LOW_STOCK_THRESHOLD).map((s) => ({
-        productTitle: p.title,
-        colorName: c.name,
-        size: s,
-        qty: c.stock[s],
-      }))
+      c.sizes
+        .filter((s) => s.stock > 0 && s.stock <= LOW_STOCK_THRESHOLD)
+        .map((s) => ({
+          productTitle: p.title,
+          colorName: c.name,
+          size: s.sizeRu ?? s.sizeEu ?? s.sizeInt ?? '—',
+          qty: s.stock,
+        }))
     )
   );
 
