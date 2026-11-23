@@ -58,6 +58,7 @@ model Product {
   brand            String?
   countryOfOrigin  String?
   season           String?
+  material         String?
   composition      String?
   characteristics  Json? // free-form { "Силуэт": "Oversize", "Застёжка": "Молния", ... }
 

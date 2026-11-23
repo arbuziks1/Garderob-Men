@@ -22,6 +22,7 @@ export function serializeProduct(product: ProductWithColors) {
     brand: product.brand ?? undefined,
     countryOfOrigin: product.countryOfOrigin ?? undefined,
     season: product.season ?? undefined,
+    material: product.material ?? undefined,
     composition: product.composition ?? undefined,
     characteristics: (product.characteristics as Record<string, string> | null) ?? undefined,
     createdAt: product.createdAt.toISOString(),

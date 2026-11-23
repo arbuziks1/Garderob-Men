@@ -58,6 +58,7 @@ export interface SeedProduct {
   brand?: string;
   countryOfOrigin?: string;
   season?: string;
+  material?: string;
   composition?: string;
   characteristics?: Record<string, string>;
 }
@@ -82,6 +83,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Демисезон',
+    material: 'Эко-кожа (искусственная)',
     composition: '100% эко-кожа, подкладка 100% полиэстер',
     characteristics: {
       Силуэт: 'Прямой',
@@ -104,6 +106,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Демисезон',
+    material: 'Деним',
     composition: '100% хлопок (деним)',
     characteristics: {
       Силуэт: 'Прямой',
@@ -127,6 +130,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
     season: 'Демисезон',
+    material: 'Полиэстер',
     composition: 'Верх 100% полиэстер, утеплитель синтепон 100 г/м²',
     characteristics: {
       Силуэт: 'Oversize',
@@ -147,6 +151,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Демисезон',
+    material: 'Хлопок',
     composition: '80% хлопок, 20% полиэстер',
     characteristics: {
       Силуэт: 'Oversize',
@@ -167,6 +172,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Демисезон',
+    material: 'Хлопок',
     composition: '95% хлопок, 5% эластан',
     characteristics: {
       Силуэт: 'Прямой',
@@ -190,6 +196,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
     season: 'Демисезон',
+    material: 'Хлопок',
     composition: '80% хлопок, 20% полиэстер',
     characteristics: {
       Силуэт: 'Oversize',
@@ -208,6 +215,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Круглогодичный',
+    material: 'Деним',
     composition: '98% хлопок, 2% эластан',
     characteristics: {
       Крой: 'Зауженный',
@@ -226,6 +234,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Круглогодичный',
+    material: 'Хлопок',
     composition: '97% хлопок, 3% эластан',
     characteristics: {
       Крой: 'Зауженный',
@@ -244,6 +253,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Узбекистан',
     season: 'Круглогодичный',
+    material: 'Деним',
     composition: '100% хлопок (деним)',
     characteristics: {
       Крой: 'Прямой',
@@ -263,6 +273,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Демисезон',
+    material: 'Шерсть',
     composition: '70% шерсть, 30% полиэстер, подкладка 100% вискоза',
     characteristics: {
       Модель: 'Приталенная',
@@ -282,6 +293,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Круглогодичный',
+    material: 'Шерсть',
     composition: '80% шерсть, 20% полиэстер',
     characteristics: {
       Модель: 'Приталенная',
@@ -305,6 +317,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Круглогодичный',
+    material: 'Хлопок',
     composition: '97% хлопок, 3% эластан',
     characteristics: {
       Модель: 'Приталенная',
@@ -326,6 +339,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
     season: 'Демисезон',
+    material: 'Текстиль',
     characteristics: {
       'Материал верха': 'Текстиль, комбинированный',
       'Материал подошвы': 'ЭВА',
@@ -342,6 +356,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
     season: 'Лето',
+    material: 'Хлопок',
     composition: '100% хлопок',
     characteristics: {
       Застёжка: 'Регулируемая, на липучке',
@@ -357,6 +372,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Турция',
     season: 'Демисезон',
+    material: 'Замша',
     characteristics: {
       'Материал верха': 'Натуральная замша',
       'Материал подошвы': 'Резина, прошитая',
@@ -376,6 +392,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     brand: 'Без бренда',
     countryOfOrigin: 'Китай',
     season: 'Демисезон',
+    material: 'Текстиль',
     characteristics: {
       'Материал верха': 'Текстиль, замша',
       'Материал подошвы': 'ЭВА, амортизирующая',

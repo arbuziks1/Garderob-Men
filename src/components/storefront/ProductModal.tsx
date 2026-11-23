@@ -119,7 +119,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
             <p className="rounded-lg bg-stone-100 px-3 py-2 text-xs text-graphite-600">{product.modelNote}</p>
           )}
 
-          {(product.brand || product.countryOfOrigin || product.season || product.composition ||
+          {(product.brand || product.countryOfOrigin || product.season || product.material || product.composition ||
             (product.characteristics && Object.keys(product.characteristics).length > 0)) && (
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-graphite-600">Характеристики</p>
@@ -127,6 +127,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                 {product.brand && <CharacteristicRow label="Бренд" value={product.brand} />}
                 {product.countryOfOrigin && <CharacteristicRow label="Страна производства" value={product.countryOfOrigin} />}
                 {product.season && <CharacteristicRow label="Сезон" value={product.season} />}
+                {product.material && <CharacteristicRow label="Материал" value={product.material} />}
                 {product.composition && <CharacteristicRow label="Состав" value={product.composition} />}
                 {product.characteristics &&
                   Object.entries(product.characteristics).map(([label, value]) => (

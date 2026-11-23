@@ -63,6 +63,7 @@ interface ProductInput {
   brand?: string;
   countryOfOrigin?: string;
   season?: string;
+  material?: string;
   composition?: string;
   characteristics?: Record<string, string>;
 }
@@ -117,6 +118,7 @@ adminProductsRouter.post('/', async (req, res) => {
         brand: blankToNull(body.brand),
         countryOfOrigin: blankToNull(body.countryOfOrigin),
         season: blankToNull(body.season),
+        material: blankToNull(body.material),
         composition: blankToNull(body.composition),
         characteristics: body.characteristics ?? undefined,
         colors: { create: colorsCreateData(body.colors) },
@@ -157,6 +159,7 @@ adminProductsRouter.put('/:id', async (req, res) => {
           brand: blankToNull(body.brand),
           countryOfOrigin: blankToNull(body.countryOfOrigin),
           season: blankToNull(body.season),
+          material: blankToNull(body.material),
           composition: blankToNull(body.composition),
           characteristics: body.characteristics ?? {},
           colors: { create: colorsCreateData(body.colors) },

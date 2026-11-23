@@ -49,6 +49,7 @@ export interface Product {
   brand?: string;
   countryOfOrigin?: string;
   season?: string;
+  material?: string;
   composition?: string;
   characteristics?: Record<string, string>;
 }

@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import type { ColorVariant, Fit, Product, Size, StockBySize } from '../../types';
 import { CATEGORIES, FITS, SIZES } from '../../types';
+import { BRAND_OPTIONS, COUNTRY_OPTIONS, MATERIAL_OPTIONS } from '../../data/productOptions';
 import { api } from '../../services/api';
 import ImageField from './ImageField';
+import SearchableSelect from './SearchableSelect';
 
 interface ProductFormProps {
   product: Product | null;
@@ -244,19 +246,27 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Бренд">
-                  <input
+                  <SearchableSelect
                     value={form.brand ?? ''}
-                    onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                    onChange={(value) => setForm({ ...form, brand: value })}
+                    options={BRAND_OPTIONS}
                     placeholder="Без бренда"
-                    className="input"
                   />
                 </Field>
                 <Field label="Страна производства">
-                  <input
+                  <SearchableSelect
                     value={form.countryOfOrigin ?? ''}
-                    onChange={(e) => setForm({ ...form, countryOfOrigin: e.target.value })}
+                    onChange={(value) => setForm({ ...form, countryOfOrigin: value })}
+                    options={COUNTRY_OPTIONS}
                     placeholder="Турция"
-                    className="input"
+                  />
+                </Field>
+                <Field label="Материал">
+                  <SearchableSelect
+                    value={form.material ?? ''}
+                    onChange={(value) => setForm({ ...form, material: value })}
+                    options={MATERIAL_OPTIONS}
+                    placeholder="Хлопок"
                   />
                 </Field>
                 <Field label="Сезон">
@@ -267,7 +277,9 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
                     className="input"
                   />
                 </Field>
-                <Field label="Состав">
+              </div>
+              <div className="mt-4">
+                <Field label="Состав (подробно, в процентах)">
                   <input
                     value={form.composition ?? ''}
                     onChange={(e) => setForm({ ...form, composition: e.target.value })}

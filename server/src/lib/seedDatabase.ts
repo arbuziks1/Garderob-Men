@@ -58,6 +58,7 @@ async function resetCatalogAndSettings() {
         brand: product.brand,
         countryOfOrigin: product.countryOfOrigin,
         season: product.season,
+        material: product.material,
         composition: product.composition,
         characteristics: product.characteristics,
         colors: {
