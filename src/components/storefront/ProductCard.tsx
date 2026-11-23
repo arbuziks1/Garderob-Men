@@ -11,19 +11,19 @@ interface ProductCardProps {
   onClick: () => void;
 }
 
-/** One badge per distinct size label across all colors (prefers the INT letter grid for
- *  a compact label, falls back to RU/EU) — available if ANY color has stock in that size. */
-function sizeBadges(product: Product): { label: string; available: boolean }[] {
-  const byLabel = new Map<string, boolean>();
+/** One badge per distinct size label that's actually in stock in at least one color
+ *  (prefers the INT letter grid for a compact label, falls back to RU/EU) — sizes with
+ *  zero stock everywhere are left out entirely, not shown struck-through. */
+function sizeBadges(product: Product): string[] {
+  const inStockLabels = new Set<string>();
   for (const color of product.colors) {
     for (const s of color.sizes) {
+      if (s.stock <= 0) continue;
       const label = s.sizeInt ?? s.sizeRu ?? s.sizeEu;
-      if (!label) continue;
-      byLabel.set(label, (byLabel.get(label) ?? false) || s.stock > 0);
+      if (label) inStockLabels.add(label);
     }
   }
-  const labels = sortSizeLabels([...byLabel.keys()]);
-  return labels.map((label) => ({ label, available: byLabel.get(label) ?? false }));
+  return sortSizeLabels([...inStockLabels]);
 }
 
 export default function ProductCard({ product, onClick }: ProductCardProps) {
@@ -72,8 +72,8 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
         </p>
 
         <div className="flex flex-wrap gap-1.5 pt-0.5 text-[11px] font-medium tracking-wide">
-          {badges.map(({ label, available }) => (
-            <span key={label} className={available ? 'text-graphite-600' : 'text-stone-300 line-through'}>
+          {badges.map((label) => (
+            <span key={label} className="text-graphite-600">
               {label}
             </span>
           ))}

@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import FilterControls, { hasActiveFilters, resetFilters, type FilterState } from './FilterControls';
 import { EASE } from '../../utils/motion';
 
-interface MobileFilterSheetProps {
+interface FilterSheetProps {
   open: boolean;
   onClose: () => void;
   filters: FilterState;
@@ -12,20 +12,23 @@ interface MobileFilterSheetProps {
   availableSizes: string[];
 }
 
-export default function MobileFilterSheet({
+/** Shared filter panel for both mobile and desktop — a bottom sheet that slides up over
+ *  the page, triggered by a "Фильтры (N)" button rather than a permanent sidebar, so the
+ *  product grid keeps its full width until the shopper actually wants to filter. */
+export default function FilterSheet({
   open,
   onClose,
   filters,
   onChange,
   priceCeiling,
   availableSizes,
-}: MobileFilterSheetProps) {
+}: FilterSheetProps) {
   const active = hasActiveFilters(filters, priceCeiling);
 
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end lg:hidden">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -39,7 +42,7 @@ export default function MobileFilterSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ duration: 0.4, ease: EASE }}
-            className="relative flex max-h-[85vh] w-full flex-col rounded-t-md bg-white"
+            className="relative flex max-h-[85vh] w-full flex-col rounded-t-md bg-white sm:max-w-md sm:rounded-md"
           >
             <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
               <p className="font-display text-sm uppercase tracking-wide text-graphite-950">Фильтры</p>

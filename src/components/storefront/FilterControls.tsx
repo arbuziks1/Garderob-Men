@@ -1,12 +1,12 @@
-import type { Fit, SizeFit } from '../../types';
-import { FITS, SIZE_FIT_LABEL, SIZE_FITS } from '../../types';
+import { useState } from 'react';
+import type { Fit } from '../../types';
+import { FITS } from '../../types';
 import { SEASON_OPTIONS } from '../../data/categoryCharacteristics';
 
 export interface FilterState {
   sizes: string[];
   fits: Fit[];
   seasons: string[];
-  sizeFits: SizeFit[];
   maxPrice: number;
   inStockOnly: boolean;
 }
@@ -19,21 +19,48 @@ interface FilterControlsProps {
 }
 
 export function hasActiveFilters(filters: FilterState, priceCeiling: number): boolean {
-  return (
-    filters.sizes.length > 0 ||
-    filters.fits.length > 0 ||
-    filters.seasons.length > 0 ||
-    filters.sizeFits.length > 0 ||
-    filters.maxPrice < priceCeiling ||
-    filters.inStockOnly
-  );
+  return countActiveFilters(filters, priceCeiling) > 0;
+}
+
+/** Number of distinct filter "groups" currently narrowing the catalog — shown next to the
+ *  Фильтры button as e.g. "Фильтры (2)" rather than a single on/off dot. */
+export function countActiveFilters(filters: FilterState, priceCeiling: number): number {
+  let count = 0;
+  if (filters.sizes.length > 0) count += 1;
+  if (filters.fits.length > 0) count += 1;
+  if (filters.seasons.length > 0) count += 1;
+  if (filters.maxPrice < priceCeiling) count += 1;
+  if (filters.inStockOnly) count += 1;
+  return count;
 }
 
 export function resetFilters(priceCeiling: number): FilterState {
-  return { sizes: [], fits: [], seasons: [], sizeFits: [], maxPrice: priceCeiling, inStockOnly: false };
+  return { sizes: [], fits: [], seasons: [], maxPrice: priceCeiling, inStockOnly: false };
+}
+
+type SizeGrid = 'ru' | 'int' | 'jeans';
+const SIZE_GRID_LABEL: Record<SizeGrid, string> = { ru: 'RU', int: 'INT', jeans: 'Джинсы W' };
+
+/** Buckets a flat list of size labels (already deduplicated across the whole catalog) into
+ *  the three grids a shopper might think in: plain RU/EU numbers, letter sizes (INT), and
+ *  jeans waist sizes ("W30" etc). Keeps the "Размер" filter from turning into one giant
+ *  mixed pile of 44-58, S-2XL and W28-W38 all in a row. */
+function bucketSizes(sizes: string[]): Record<SizeGrid, string[]> {
+  const buckets: Record<SizeGrid, string[]> = { ru: [], int: [], jeans: [] };
+  for (const size of sizes) {
+    if (/^W\d+$/i.test(size)) buckets.jeans.push(size);
+    else if (/^\d+$/.test(size)) buckets.ru.push(size);
+    else buckets.int.push(size);
+  }
+  return buckets;
 }
 
 export default function FilterControls({ filters, onChange, priceCeiling, availableSizes }: FilterControlsProps) {
+  const sizeBuckets = bucketSizes(availableSizes);
+  const availableGrids = (['ru', 'int', 'jeans'] as SizeGrid[]).filter((g) => sizeBuckets[g].length > 0);
+  const [sizeGrid, setSizeGrid] = useState<SizeGrid>(availableGrids[0] ?? 'ru');
+  const activeGrid = availableGrids.includes(sizeGrid) ? sizeGrid : availableGrids[0];
+
   const toggleSize = (size: string) => {
     const sizes = filters.sizes.includes(size)
       ? filters.sizes.filter((s) => s !== size)
@@ -53,22 +80,33 @@ export default function FilterControls({ filters, onChange, priceCeiling, availa
     onChange({ ...filters, seasons });
   };
 
-  const toggleSizeFit = (sizeFit: SizeFit) => {
-    const sizeFits = filters.sizeFits.includes(sizeFit)
-      ? filters.sizeFits.filter((f) => f !== sizeFit)
-      : [...filters.sizeFits, sizeFit];
-    onChange({ ...filters, sizeFits });
-  };
-
   const active = hasActiveFilters(filters, priceCeiling);
 
   return (
     <div className="flex flex-col gap-5">
-      {availableSizes.length > 0 && (
+      {availableSizes.length > 0 && activeGrid && (
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Размер</p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Размер</p>
+            {availableGrids.length > 1 && (
+              <div className="flex gap-1 rounded-full bg-stone-100 p-0.5">
+                {availableGrids.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setSizeGrid(g)}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide transition-colors ${
+                      activeGrid === g ? 'bg-graphite-950 text-white' : 'text-graphite-600 hover:text-graphite-950'
+                    }`}
+                  >
+                    {SIZE_GRID_LABEL[g]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
-            {availableSizes.map((size) => (
+            {sizeBuckets[activeGrid].map((size) => (
               <button
                 key={size}
                 onClick={() => toggleSize(size)}
@@ -119,25 +157,6 @@ export default function FilterControls({ filters, onChange, priceCeiling, availa
             >
               {season}
             </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-          Соответствие размеру
-        </p>
-        <div className="flex flex-col gap-2">
-          {SIZE_FITS.map((sf) => (
-            <label key={sf} className="flex cursor-pointer items-center gap-2 text-sm text-graphite-800">
-              <input
-                type="checkbox"
-                checked={filters.sizeFits.includes(sf)}
-                onChange={() => toggleSizeFit(sf)}
-                className="h-4 w-4 accent-graphite-950"
-              />
-              {SIZE_FIT_LABEL[sf]}
-            </label>
           ))}
         </div>
       </div>

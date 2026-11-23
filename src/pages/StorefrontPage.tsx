@@ -6,12 +6,15 @@ import { sortSizeLabels } from '../data/sizeGrids';
 import { useProducts, useSettings } from '../hooks/useStore';
 import Header from '../components/storefront/Header';
 import HeroBanner from '../components/storefront/HeroBanner';
-import CatalogFilters, { type FilterState } from '../components/storefront/CatalogFilters';
+import FiltersBar from '../components/storefront/FiltersBar';
+import FilterSheet from '../components/storefront/FilterSheet';
+import type { FilterState } from '../components/storefront/FilterControls';
 import MobileCategoryBar from '../components/storefront/MobileCategoryBar';
 import ProductGrid from '../components/storefront/ProductGrid';
 import ProductModal from '../components/storefront/ProductModal';
 import CartDrawer from '../components/storefront/CartDrawer';
 import CartToast from '../components/storefront/CartToast';
+import FloatingCartBar from '../components/storefront/FloatingCartBar';
 import Footer from '../components/storefront/Footer';
 
 export default function StorefrontPage() {
@@ -20,6 +23,7 @@ export default function StorefrontPage() {
   const [activeCategory, setActiveCategory] = useState<Category | 'Все' | null>('Все');
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const catalogRef = useRef<HTMLDivElement>(null);
 
   const [, priceMax] = useMemo(() => priceRange(products), [products]);
@@ -27,7 +31,6 @@ export default function StorefrontPage() {
     sizes: [],
     fits: [],
     seasons: [],
-    sizeFits: [],
     maxPrice: priceMax || 200000,
     inStockOnly: false,
   });
@@ -51,7 +54,6 @@ export default function StorefrontPage() {
       if (search.trim() && !p.title.toLowerCase().includes(search.trim().toLowerCase())) return false;
       if (filters.fits.length > 0 && !filters.fits.includes(p.fit)) return false;
       if (filters.seasons.length > 0 && (!p.season || !filters.seasons.includes(p.season))) return false;
-      if (filters.sizeFits.length > 0 && (!p.sizeFit || !filters.sizeFits.includes(p.sizeFit))) return false;
       if (p.price > filters.maxPrice) return false;
       if (filters.inStockOnly && !isInStock(p)) return false;
       if (filters.sizes.length > 0) {
@@ -88,34 +90,40 @@ export default function StorefrontPage() {
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
           filters={filters}
-          onFiltersChange={setFilters}
           priceCeiling={priceMax || 200000}
-          availableSizes={availableSizes}
+          onOpenFilters={() => setFiltersOpen(true)}
         />
       </div>
 
       <HeroBanner settings={settings} onShopClick={scrollToCatalog} />
 
-      <main
-        ref={catalogRef}
-        className="mx-auto flex w-full max-w-7xl flex-1 scroll-mt-20 flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row"
-      >
-        <CatalogFilters
+      <main ref={catalogRef} className="mx-auto w-full max-w-7xl flex-1 scroll-mt-20 px-4 py-8 sm:px-6">
+        <FiltersBar
           filters={filters}
-          onChange={setFilters}
           priceCeiling={priceMax || 200000}
-          availableSizes={availableSizes}
+          resultCount={filteredProducts.length}
+          onOpenFilters={() => setFiltersOpen(true)}
         />
         <ProductGrid products={filteredProducts} onSelect={setSelectedProduct} />
       </main>
 
       <Footer settings={settings} />
 
+      <FilterSheet
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        filters={filters}
+        onChange={setFilters}
+        priceCeiling={priceMax || 200000}
+        availableSizes={availableSizes}
+      />
+
       <AnimatePresence>
         {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
       </AnimatePresence>
       <CartDrawer />
       <CartToast />
+      <FloatingCartBar />
     </div>
   );
 }

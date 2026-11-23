@@ -1,30 +1,25 @@
-import { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import type { Category } from '../../types';
 import { CATEGORIES } from '../../types';
 import type { FilterState } from './FilterControls';
-import { hasActiveFilters } from './FilterControls';
-import MobileFilterSheet from './MobileFilterSheet';
+import { countActiveFilters } from './FilterControls';
 
 interface MobileCategoryBarProps {
   activeCategory: Category | 'Все' | null;
   onCategoryChange: (category: Category | 'Все' | null) => void;
   filters: FilterState;
-  onFiltersChange: (filters: FilterState) => void;
   priceCeiling: number;
-  availableSizes: string[];
+  onOpenFilters: () => void;
 }
 
 export default function MobileCategoryBar({
   activeCategory,
   onCategoryChange,
   filters,
-  onFiltersChange,
   priceCeiling,
-  availableSizes,
+  onOpenFilters,
 }: MobileCategoryBarProps) {
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const active = hasActiveFilters(filters, priceCeiling);
+  const activeCount = countActiveFilters(filters, priceCeiling);
 
   const pillClass = (isActive: boolean) =>
     `shrink-0 whitespace-nowrap rounded-sm border px-3.5 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors ${
@@ -34,39 +29,27 @@ export default function MobileCategoryBar({
     }`;
 
   return (
-    <>
-      <div className="max-w-full border-b border-stone-200 bg-paper/95 backdrop-blur-sm lg:hidden">
-        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-4 py-3">
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="relative flex shrink-0 items-center gap-1.5 rounded-sm border border-graphite-950 bg-graphite-950 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-white"
-          >
-            <SlidersHorizontal size={13} />
-            Фильтры
-            {active && <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-ember" />}
-          </button>
+    <div className="max-w-full border-b border-stone-200 bg-paper/95 backdrop-blur-sm lg:hidden">
+      <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-4 py-3">
+        <button
+          onClick={onOpenFilters}
+          className="flex shrink-0 items-center gap-1.5 rounded-sm border border-graphite-950 bg-graphite-950 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-white"
+        >
+          <SlidersHorizontal size={13} />
+          Фильтры{activeCount > 0 ? ` (${activeCount})` : ''}
+        </button>
 
-          <span className="h-5 w-px shrink-0 bg-stone-300" />
+        <span className="h-5 w-px shrink-0 bg-stone-300" />
 
-          <button onClick={() => onCategoryChange('Все')} className={pillClass(activeCategory === 'Все' || activeCategory === null)}>
-            Все
+        <button onClick={() => onCategoryChange('Все')} className={pillClass(activeCategory === 'Все' || activeCategory === null)}>
+          Все
+        </button>
+        {CATEGORIES.map((cat) => (
+          <button key={cat} onClick={() => onCategoryChange(cat)} className={pillClass(activeCategory === cat)}>
+            {cat}
           </button>
-          {CATEGORIES.map((cat) => (
-            <button key={cat} onClick={() => onCategoryChange(cat)} className={pillClass(activeCategory === cat)}>
-              {cat}
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
-
-      <MobileFilterSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        filters={filters}
-        onChange={onFiltersChange}
-        priceCeiling={priceCeiling}
-        availableSizes={availableSizes}
-      />
-    </>
+    </div>
   );
 }
