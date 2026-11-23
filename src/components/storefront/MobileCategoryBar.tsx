@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from 'lucide-react';
 import type { Category } from '../../types';
 import { CATEGORIES } from '../../types';
+import { useHorizontalScroll } from '../../hooks/useHorizontalScroll';
 import type { FilterState } from './FilterControls';
 import { countActiveFilters } from './FilterControls';
 
@@ -20,6 +21,7 @@ export default function MobileCategoryBar({
   onOpenFilters,
 }: MobileCategoryBarProps) {
   const activeCount = countActiveFilters(filters, priceCeiling);
+  const scrollRef = useHorizontalScroll<HTMLDivElement>();
 
   const pillClass = (isActive: boolean) =>
     `shrink-0 whitespace-nowrap rounded-sm border px-3.5 py-1.5 text-xs font-medium uppercase tracking-wide transition-colors ${
@@ -30,7 +32,7 @@ export default function MobileCategoryBar({
 
   return (
     <div className="max-w-full border-b border-stone-200 bg-paper/95 backdrop-blur-sm lg:hidden">
-      <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-4 py-3">
+      <div ref={scrollRef} className="no-scrollbar flex cursor-grab items-center gap-2 overflow-x-auto px-4 py-3">
         <button
           onClick={onOpenFilters}
           className="flex shrink-0 items-center gap-1.5 rounded-sm border border-graphite-950 bg-graphite-950 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-white"

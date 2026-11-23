@@ -5,6 +5,7 @@ import type { Category } from '../../types';
 import { CATEGORIES } from '../../types';
 import type { StoreSettings } from '../../types';
 import { useCart } from '../../contexts/CartContext';
+import { useHorizontalScroll } from '../../hooks/useHorizontalScroll';
 
 interface HeaderProps {
   settings: StoreSettings;
@@ -23,6 +24,7 @@ export default function Header({
 }: HeaderProps) {
   const { itemCount, openDrawer } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const categoryNavRef = useHorizontalScroll<HTMLElement>();
 
   return (
     <header className="bg-graphite-950 text-paper shadow-lg shadow-black/20">
@@ -39,7 +41,10 @@ export default function Header({
           <span className="font-semibold">GARDEROB</span> <span className="font-normal text-stone-300">MEN</span>
         </a>
 
-        <nav className="no-scrollbar ml-6 hidden min-w-0 flex-1 items-center gap-4 overflow-x-auto xl:gap-6 lg:flex">
+        <nav
+          ref={categoryNavRef}
+          className="no-scrollbar ml-6 hidden min-w-0 flex-1 cursor-grab items-center gap-4 overflow-x-auto xl:gap-6 lg:flex"
+        >
           <button
             onClick={() => onCategoryChange('Все')}
             className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.06em] transition-colors ${
