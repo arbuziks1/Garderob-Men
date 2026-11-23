@@ -38,10 +38,32 @@ function emptyProduct(): Product {
   };
 }
 
+interface CharRow {
+  id: string;
+  key: string;
+  value: string;
+}
+
+function charRowsFromProduct(product: Product | null): CharRow[] {
+  const entries = Object.entries(product?.characteristics ?? {});
+  return entries.map(([key, value], idx) => ({ id: `row${idx}`, key, value }));
+}
+
 export default function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
   const [form, setForm] = useState<Product>(product ? structuredClone(product) : emptyProduct());
+  const [charRows, setCharRows] = useState<CharRow[]>(charRowsFromProduct(product));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const updateCharRow = (id: string, patch: Partial<Pick<CharRow, 'key' | 'value'>>) => {
+    setCharRows((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  };
+  const addCharRow = () => {
+    setCharRows((rows) => [...rows, { id: `row${Date.now()}${Math.random()}`, key: '', value: '' }]);
+  };
+  const removeCharRow = (id: string) => {
+    setCharRows((rows) => rows.filter((r) => r.id !== id));
+  };
 
   const updateColor = (idx: number, patch: Partial<ColorVariant>) => {
     setForm((f) => ({
@@ -100,9 +122,13 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
       setError('Цена должна быть больше нуля');
       return;
     }
+    const characteristics = Object.fromEntries(
+      charRows.filter((r) => r.key.trim()).map((r) => [r.key.trim(), r.value.trim()])
+    );
     const cleaned: Product = {
       ...form,
       colors: form.colors.map((c) => ({ ...c, images: c.images.filter((img) => img.trim()) })),
+      characteristics,
     };
     setSaving(true);
     setError('');
@@ -211,6 +237,89 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
                 className="input"
               />
             </Field>
+
+            <div className="border-t border-stone-200 pt-4">
+              <p className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-graphite-800">
+                Характеристики (как в Kaspi Магазин)
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Бренд">
+                  <input
+                    value={form.brand ?? ''}
+                    onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                    placeholder="Без бренда"
+                    className="input"
+                  />
+                </Field>
+                <Field label="Страна производства">
+                  <input
+                    value={form.countryOfOrigin ?? ''}
+                    onChange={(e) => setForm({ ...form, countryOfOrigin: e.target.value })}
+                    placeholder="Турция"
+                    className="input"
+                  />
+                </Field>
+                <Field label="Сезон">
+                  <input
+                    value={form.season ?? ''}
+                    onChange={(e) => setForm({ ...form, season: e.target.value })}
+                    placeholder="Демисезон"
+                    className="input"
+                  />
+                </Field>
+                <Field label="Состав">
+                  <input
+                    value={form.composition ?? ''}
+                    onChange={(e) => setForm({ ...form, composition: e.target.value })}
+                    placeholder="80% хлопок, 20% полиэстер"
+                    className="input"
+                  />
+                </Field>
+              </div>
+
+              <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-medium text-graphite-500">
+                    Доп. характеристики (свои поля — силуэт, застёжка, капюшон и т.п.)
+                  </p>
+                  <button
+                    onClick={addCharRow}
+                    type="button"
+                    className="flex items-center gap-1 text-sm font-medium text-ember"
+                  >
+                    <Plus size={14} /> Добавить
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {charRows.map((row) => (
+                    <div key={row.id} className="flex items-center gap-2">
+                      <input
+                        value={row.key}
+                        onChange={(e) => updateCharRow(row.id, { key: e.target.value })}
+                        placeholder="Название, напр. Силуэт"
+                        className="input flex-1"
+                      />
+                      <input
+                        value={row.value}
+                        onChange={(e) => updateCharRow(row.id, { value: e.target.value })}
+                        placeholder="Значение, напр. Oversize"
+                        className="input flex-1"
+                      />
+                      <button
+                        onClick={() => removeCharRow(row.id)}
+                        type="button"
+                        className="shrink-0 rounded-md p-2 text-ember hover:bg-stone-100"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ))}
+                  {charRows.length === 0 && (
+                    <p className="text-sm text-graphite-400">Доп. характеристик пока нет</p>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div className="border-t border-stone-200 pt-4">
               <div className="mb-3 flex items-center justify-between">

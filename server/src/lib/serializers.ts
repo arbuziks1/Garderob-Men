@@ -19,6 +19,11 @@ export function serializeProduct(product: ProductWithColors) {
     oldPrice: product.oldPrice ?? undefined,
     description: product.description,
     modelNote: product.modelNote ?? undefined,
+    brand: product.brand ?? undefined,
+    countryOfOrigin: product.countryOfOrigin ?? undefined,
+    season: product.season ?? undefined,
+    composition: product.composition ?? undefined,
+    characteristics: (product.characteristics as Record<string, string> | null) ?? undefined,
     createdAt: product.createdAt.toISOString(),
     colors: [...product.colors]
       .sort((a, b) => a.position - b.position)

@@ -60,6 +60,11 @@ interface ProductInput {
   description: string;
   modelNote?: string;
   colors: ColorInput[];
+  brand?: string;
+  countryOfOrigin?: string;
+  season?: string;
+  composition?: string;
+  characteristics?: Record<string, string>;
 }
 
 function colorsCreateData(colors: ColorInput[]) {
@@ -79,6 +84,13 @@ function colorsCreateData(colors: ColorInput[]) {
 }
 
 const include = { colors: { include: { images: true } } } as const;
+
+/** Treats a blank optional text field as "not set" (null) rather than storing an empty
+ *  string — used on both create and update so clearing a field in the admin form actually
+ *  clears it in the database instead of being ignored. */
+function blankToNull(value: string | undefined): string | null {
+  return value?.trim() ? value.trim() : null;
+}
 
 adminProductsRouter.get('/', async (_req, res) => {
   const products = await prisma.product.findMany({ include, orderBy: { createdAt: 'asc' } });
@@ -102,6 +114,11 @@ adminProductsRouter.post('/', async (req, res) => {
         oldPrice: body.oldPrice,
         description: body.description,
         modelNote: body.modelNote,
+        brand: blankToNull(body.brand),
+        countryOfOrigin: blankToNull(body.countryOfOrigin),
+        season: blankToNull(body.season),
+        composition: blankToNull(body.composition),
+        characteristics: body.characteristics ?? undefined,
         colors: { create: colorsCreateData(body.colors) },
       },
       include,
@@ -137,6 +154,11 @@ adminProductsRouter.put('/:id', async (req, res) => {
           oldPrice: body.oldPrice,
           description: body.description,
           modelNote: body.modelNote,
+          brand: blankToNull(body.brand),
+          countryOfOrigin: blankToNull(body.countryOfOrigin),
+          season: blankToNull(body.season),
+          composition: blankToNull(body.composition),
+          characteristics: body.characteristics ?? {},
           colors: { create: colorsCreateData(body.colors) },
         },
         include,

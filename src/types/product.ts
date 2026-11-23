@@ -46,6 +46,11 @@ export interface Product {
   modelNote?: string;
   colors: ColorVariant[];
   createdAt: string;
+  brand?: string;
+  countryOfOrigin?: string;
+  season?: string;
+  composition?: string;
+  characteristics?: Record<string, string>;
 }
 
 export function totalStock(product: Product): number {

@@ -55,6 +55,11 @@ export interface SeedProduct {
   description: string;
   modelNote?: string;
   colors: SeedColor[];
+  brand?: string;
+  countryOfOrigin?: string;
+  season?: string;
+  composition?: string;
+  characteristics?: Record<string, string>;
 }
 
 function stock(s: number, m: number, l: number, xl: number, xxl: number): SeedStock {
@@ -74,6 +79,16 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     colors: [
       { name: 'Чёрный', hex: '#16161a', images: [IMG.leatherJacketProduct, IMG.leatherJacketModel], stock: stock(2, 6, 8, 5, 0) },
     ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Турция',
+    season: 'Демисезон',
+    composition: '100% эко-кожа, подкладка 100% полиэстер',
+    characteristics: {
+      Силуэт: 'Прямой',
+      Застёжка: 'Молния',
+      Капюшон: 'Нет',
+      Карманы: '4',
+    },
   },
   {
     title: 'Джинсовая куртка классическая',
@@ -86,6 +101,15 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     colors: [
       { name: 'Синий деним', hex: '#3e5572', images: [IMG.denimJacketProduct, IMG.denimJacketModel], stock: stock(4, 9, 10, 7, 3) },
     ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Демисезон',
+    composition: '100% хлопок (деним)',
+    characteristics: {
+      Силуэт: 'Прямой',
+      Застёжка: 'Кнопки',
+      Карманы: '4',
+    },
   },
   {
     title: 'Бомбер стёганый',
@@ -100,6 +124,16 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       { name: 'Терракотовый', hex: '#9c5a35', images: [IMG.bomberProduct], stock: stock(0, 3, 6, 4, 2) },
       { name: 'Чёрный', hex: '#141414', images: [IMG.quiltedJacketModel], stock: stock(3, 7, 9, 6, 0) },
     ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Китай',
+    season: 'Демисезон',
+    composition: 'Верх 100% полиэстер, утеплитель синтепон 100 г/м²',
+    characteristics: {
+      Силуэт: 'Oversize',
+      Застёжка: 'Молния',
+      Утеплитель: 'Синтепон',
+      Капюшон: 'Нет',
+    },
   },
   {
     title: 'Худи оверсайз базовое',
@@ -110,6 +144,16 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Плотный футер трёхнитка с начёсом, капюшон на кулиске, карман-кенгуру. Свободный оверсайз-силуэт, рукав реглан.',
     modelNote: 'На модели размер L, рост 182 см',
     colors: [{ name: 'Серый меланж', hex: '#8a8a8f', images: [IMG.hoodieGreyModel], stock: stock(5, 10, 12, 8, 4) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Демисезон',
+    composition: '80% хлопок, 20% полиэстер',
+    characteristics: {
+      Силуэт: 'Oversize',
+      Капюшон: 'Есть, на кулиске',
+      Рукав: 'Реглан',
+      'Плотность, г/м²': '320',
+    },
   },
   {
     title: 'Свитшот базовый',
@@ -120,6 +164,15 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Классический свитшот без капюшона из плотного хлопкового футера. Прямой крой, рибана на манжетах и низе изделия.',
     modelNote: 'На модели размер M, рост 178 см',
     colors: [{ name: 'Белый', hex: '#f2f1ec', images: [IMG.sweatshirtWhiteProduct], stock: stock(6, 10, 10, 6, 2) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Демисезон',
+    composition: '95% хлопок, 5% эластан',
+    characteristics: {
+      Силуэт: 'Прямой',
+      Капюшон: 'Нет',
+      Рукав: 'Длинный',
+    },
   },
   {
     title: 'Свитшот оверсайз с принтом',
@@ -134,6 +187,15 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       { name: 'Чёрный с принтом', hex: '#161616', images: [IMG.graphicTeeModel], stock: stock(4, 8, 9, 5, 2) },
       { name: 'Розовый пудровый', hex: '#d99a86', images: [IMG.pinkSweatshirtModel], stock: stock(2, 4, 4, 2, 0) },
     ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Китай',
+    season: 'Демисезон',
+    composition: '80% хлопок, 20% полиэстер',
+    characteristics: {
+      Силуэт: 'Oversize',
+      'Плотность, г/м²': '320',
+      Капюшон: 'Нет',
+    },
   },
   {
     title: 'Джинсы зауженные',
@@ -143,6 +205,15 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     description: 'Зауженные джинсы из плотного стрейч-денима. Средняя посадка, лёгкие потёртости, пять карманов.',
     modelNote: 'На модели размер 32, соответствует M',
     colors: [{ name: 'Синий', hex: '#35526b', images: [IMG.jeansRackProduct], stock: stock(3, 8, 9, 5, 0) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Круглогодичный',
+    composition: '98% хлопок, 2% эластан',
+    characteristics: {
+      Крой: 'Зауженный',
+      Посадка: 'Средняя',
+      Застёжка: 'Молния, пуговица',
+    },
   },
   {
     title: 'Чиносы Slim',
@@ -152,6 +223,15 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     description: 'Хлопковые чиносы зауженного кроя. Эластичный пояс, скрытые карманы, низ зафиксирован манжетой.',
     modelNote: 'На модели размер M, рост 179 см',
     colors: [{ name: 'Хаки', hex: '#9c8558', images: [IMG.chinosModel], stock: stock(5, 9, 10, 6, 3) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Круглогодичный',
+    composition: '97% хлопок, 3% эластан',
+    characteristics: {
+      Крой: 'Зауженный',
+      Посадка: 'Средняя',
+      Пояс: 'Эластичный',
+    },
   },
   {
     title: 'Джинсы прямого кроя',
@@ -161,6 +241,14 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     description: 'Джинсы прямого силуэта из плотного денима без эластана. Классическая посадка на талии, пять карманов.',
     modelNote: 'На модели размер M, рост 181 см',
     colors: [{ name: 'Тёмно-синий', hex: '#24344a', images: [IMG.outfitFlatlay], stock: stock(2, 6, 7, 4, 1) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Круглогодичный',
+    composition: '100% хлопок (деним)',
+    characteristics: {
+      Крой: 'Прямой',
+      Посадка: 'Средняя',
+    },
   },
   {
     title: 'Костюм-тройка в клетку',
@@ -172,6 +260,16 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Костюм-тройка из шерстяной смеси в клетку: пиджак, жилет и брюки. Приталенный силуэт, подкладка из вискозы.',
     modelNote: 'На модели размер L, рост 185 см',
     colors: [{ name: 'Синяя клетка', hex: '#3b4a63', images: [IMG.checkSuitModel], stock: stock(0, 2, 3, 2, 1) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Турция',
+    season: 'Демисезон',
+    composition: '70% шерсть, 30% полиэстер, подкладка 100% вискоза',
+    characteristics: {
+      Модель: 'Приталенная',
+      'Тип изделия': 'Пиджак, жилет, брюки',
+      Застёжка: 'На пуговицы',
+      Узор: 'Клетка',
+    },
   },
   {
     title: 'Костюм классический',
@@ -181,6 +279,15 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     description: 'Строгий классический костюм из смесовой шерсти. Приталенный крой, однобортный пиджак на две пуговицы.',
     modelNote: 'На модели размер M, рост 180 см',
     colors: [{ name: 'Тёмно-синий', hex: '#1f2a44', images: [IMG.navySuitModel], stock: stock(1, 4, 5, 3, 1) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Турция',
+    season: 'Круглогодичный',
+    composition: '80% шерсть, 20% полиэстер',
+    characteristics: {
+      Модель: 'Приталенная',
+      'Тип изделия': 'Пиджак, брюки',
+      Застёжка: 'На пуговицы, однобортный',
+    },
   },
   {
     title: 'Рубашка классическая',
@@ -195,6 +302,16 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       { name: 'Бордовый', hex: '#5b2430', images: [IMG.shirtsFolded], stock: stock(3, 7, 8, 4, 2) },
       { name: 'Белый', hex: '#efece4', images: [IMG.shirtsFolded], stock: stock(6, 12, 12, 8, 4) },
     ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Турция',
+    season: 'Круглогодичный',
+    composition: '97% хлопок, 3% эластан',
+    characteristics: {
+      Модель: 'Приталенная',
+      'Тип воротника': 'Классический',
+      'Тип рукава': 'Длинный',
+      Узор: 'Однотонная',
+    },
   },
   {
     title: 'Кроссовки повседневные',
@@ -206,6 +323,14 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       { name: 'Чёрный', hex: '#202020', images: [IMG.sneakerDark], stock: stock(0, 2, 4, 3, 0) },
       { name: 'Бежевый', hex: '#c8a06c', images: [IMG.sneakerTan], stock: stock(1, 3, 5, 2, 1) },
     ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Китай',
+    season: 'Демисезон',
+    characteristics: {
+      'Материал верха': 'Текстиль, комбинированный',
+      'Материал подошвы': 'ЭВА',
+      Застёжка: 'Шнурки',
+    },
   },
   {
     title: 'Кепка бейсболка',
@@ -214,6 +339,13 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     price: 9900,
     description: 'Бейсболка из плотного хлопка с вышитым логотипом и регулировкой по размеру.',
     colors: [{ name: 'Серый', hex: '#55565c', images: [IMG.capGrey], stock: stock(8, 8, 8, 8, 8) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Китай',
+    season: 'Лето',
+    composition: '100% хлопок',
+    characteristics: {
+      Застёжка: 'Регулируемая, на липучке',
+    },
   },
   {
     title: 'Ботинки замшевые Челси',
@@ -222,6 +354,14 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     price: 47900,
     description: 'Ботинки Челси из натуральной замши на резинках, прошитая подошва.',
     colors: [{ name: 'Коричневый', hex: '#5a3b25', images: [IMG.bootsFlatlay], stock: stock(2, 4, 4, 3, 0) }],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Турция',
+    season: 'Демисезон',
+    characteristics: {
+      'Материал верха': 'Натуральная замша',
+      'Материал подошвы': 'Резина, прошитая',
+      Застёжка: 'Резинки по бокам',
+    },
   },
   {
     title: 'Кроссовки street',
@@ -233,6 +373,14 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       { name: 'Бирюзовый', hex: '#1f6f6f', images: [IMG.sneakerTeal], stock: stock(3, 5, 6, 3, 1) },
       { name: 'Белый', hex: '#e8e3da', images: [IMG.sneakerWhiteOrange], stock: stock(2, 4, 5, 2, 0) },
     ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Китай',
+    season: 'Демисезон',
+    characteristics: {
+      'Материал верха': 'Текстиль, замша',
+      'Материал подошвы': 'ЭВА, амортизирующая',
+      Застёжка: 'Шнурки',
+    },
   },
 ];
 

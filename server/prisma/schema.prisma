@@ -52,6 +52,15 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Product-card attributes shown the way Kaspi Магазин shows them (researched from
+  // live Kaspi listings — brand/country/season/composition are near-universal across
+  // categories, everything else varies too much per category for its own column).
+  brand            String?
+  countryOfOrigin  String?
+  season           String?
+  composition      String?
+  characteristics  Json? // free-form { "Силуэт": "Oversize", "Застёжка": "Молния", ... }
+
   colors     ProductColor[]
   orderItems OrderItem[]
 }

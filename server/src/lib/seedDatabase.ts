@@ -55,6 +55,11 @@ async function resetCatalogAndSettings() {
         oldPrice: product.oldPrice,
         description: product.description,
         modelNote: product.modelNote,
+        brand: product.brand,
+        countryOfOrigin: product.countryOfOrigin,
+        season: product.season,
+        composition: product.composition,
+        characteristics: product.characteristics,
         colors: {
           create: product.colors.map((color, position) => ({
             name: color.name,

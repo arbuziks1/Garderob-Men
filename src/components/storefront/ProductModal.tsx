@@ -119,6 +119,23 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
             <p className="rounded-lg bg-stone-100 px-3 py-2 text-xs text-graphite-600">{product.modelNote}</p>
           )}
 
+          {(product.brand || product.countryOfOrigin || product.season || product.composition ||
+            (product.characteristics && Object.keys(product.characteristics).length > 0)) && (
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-graphite-600">Характеристики</p>
+              <dl className="flex flex-col divide-y divide-stone-100 rounded-lg border border-stone-100 text-sm">
+                {product.brand && <CharacteristicRow label="Бренд" value={product.brand} />}
+                {product.countryOfOrigin && <CharacteristicRow label="Страна производства" value={product.countryOfOrigin} />}
+                {product.season && <CharacteristicRow label="Сезон" value={product.season} />}
+                {product.composition && <CharacteristicRow label="Состав" value={product.composition} />}
+                {product.characteristics &&
+                  Object.entries(product.characteristics).map(([label, value]) => (
+                    <CharacteristicRow key={label} label={label} value={value} />
+                  ))}
+              </dl>
+            </div>
+          )}
+
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-graphite-600">Цвет: {color.name}</p>
             <div className="flex gap-2">
@@ -183,6 +200,15 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           </button>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+function CharacteristicRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-3 py-2">
+      <dt className="text-graphite-500">{label}</dt>
+      <dd className="text-right font-medium text-graphite-800">{value}</dd>
     </div>
   );
 }
