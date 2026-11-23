@@ -70,6 +70,7 @@ async function resetCatalogAndSettings() {
           material: product.material,
           composition: product.composition,
           characteristics: product.characteristics,
+          measurements: product.measurements,
           colors: {
             create: product.colors.map((color, position) => ({
               name: color.name,

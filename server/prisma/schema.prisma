@@ -76,6 +76,12 @@ model Product {
   composition      String?
   characteristics  Json? // free-form { "Силуэт": "Oversize", "Застёжка": "Молния", ... }
 
+  // Compact per-size measurements table in cm, independent of per-color stock:
+  // { rows: ["Длина изделия", ...], values: { "Длина изделия": { "48 (M)": 70, ... } } }.
+  // Column keys are the combined RU/EU+INT size label (see combinedSizeLabel on the
+  // frontend) so one row of numbers covers a size regardless of which color it's on.
+  measurements Json?
+
   colors     ProductColor[]
   orderItems OrderItem[]
 }

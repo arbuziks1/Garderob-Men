@@ -51,6 +51,59 @@ export function sortSizeLabels(labels: string[]): string[] {
   });
 }
 
+/** Leading digit run of a label ("46 (S)" → 46, "W30" has none since it starts with "W"). */
+function leadingNumber(label: string): number | null {
+  const m = label.match(/^(\d+)/);
+  return m ? Number(m[1]) : null;
+}
+
+/** Same ordering idea as sortSizeLabels but for combined labels like "46 (S)" or "W30",
+ *  which aren't plain numbers or plain INT letters any more. */
+export function sortCombinedSizeLabels(labels: string[]): string[] {
+  return [...labels].sort((a, b) => {
+    const an = leadingNumber(a);
+    const bn = leadingNumber(b);
+    if (an !== null && bn !== null) return an - bn;
+    if (an !== null) return -1;
+    if (bn !== null) return 1;
+    const ai = INT_SIZE_ORDER.indexOf(a);
+    const bi = INT_SIZE_ORDER.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.localeCompare(b);
+  });
+}
+
+interface SizeLike {
+  sizeRu?: string;
+  sizeEu?: string;
+  sizeInt?: string;
+}
+
+/** The single label a measurements table keys a size by — combines the RU/EU number with
+ *  the INT letter when both are set ("46 (S)"), otherwise just whichever one is set. Used
+ *  so one row of cm values covers a size regardless of which color/grid it came from. */
+export function combinedSizeLabel(row: SizeLike): string {
+  const ruEu = row.sizeRu?.trim() || row.sizeEu?.trim();
+  const int = row.sizeInt?.trim();
+  if (ruEu && int) return `${ruEu} (${int})`;
+  return ruEu || int || '';
+}
+
+/** Distinct combined size labels across every color of a product, sorted for display —
+ *  the column set for the admin measurements table and for looking a size's cm up. */
+export function distinctSizeLabels(colors: { sizes: SizeLike[] }[]): string[] {
+  const set = new Set<string>();
+  for (const color of colors) {
+    for (const s of color.sizes) {
+      const label = combinedSizeLabel(s);
+      if (label) set.add(label);
+    }
+  }
+  return sortCombinedSizeLabels([...set]);
+}
+
 export const SIZE_GRID_PRESETS: SizeGridPreset[] = [
   {
     label: 'Верх / Костюмы RU 44–58',

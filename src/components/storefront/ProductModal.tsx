@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { Product, SizeStock } from '../../types';
 import { SIZE_FIT_LABEL } from '../../types';
+import { combinedSizeLabel } from '../../data/sizeGrids';
+import { shortMeasurementLabel } from '../../data/measurements';
 import { formatPrice } from '../../utils/format';
 import { EASE } from '../../utils/motion';
 import { useCart } from '../../contexts/CartContext';
@@ -31,6 +33,18 @@ function labelFor(row: SizeStock, grid: Grid): string {
   return gridValue(row, grid)?.trim() || row.sizeRu || row.sizeEu || row.sizeInt || '';
 }
 
+/** Distinct size-label columns that actually have at least one measurement filled in,
+ *  in the order the rows were entered (stable, no re-sort needed — the admin table
+ *  already orders them left to right the way it was filled). */
+function measurementColumns(product: Product): string[] {
+  if (!product.measurements) return [];
+  const set = new Set<string>();
+  for (const row of product.measurements.rows) {
+    for (const label of Object.keys(product.measurements.values[row] ?? {})) set.add(label);
+  }
+  return [...set];
+}
+
 export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [colorIdx, setColorIdx] = useState(0);
   const [imgIdx, setImgIdx] = useState(0);
@@ -50,6 +64,19 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
 
   const selectedRow = color.sizes.find((s) => s.id === selectedSizeId) ?? null;
   const canAdd = selectedRow !== null && selectedRow.stock > 0;
+
+  const selectedSizeMeasurementLine = useMemo(() => {
+    if (!selectedRow || !product.measurements) return null;
+    const sizeLabel = combinedSizeLabel(selectedRow);
+    const parts = product.measurements.rows
+      .map((rowLabel) => {
+        const cm = product.measurements!.values[rowLabel]?.[sizeLabel];
+        return cm !== undefined ? `${shortMeasurementLabel(rowLabel)} ${cm} см` : null;
+      })
+      .filter((p): p is string => p !== null);
+    if (parts.length === 0) return null;
+    return `${sizeLabel}: ${parts.join(' · ')}`;
+  }, [selectedRow, product.measurements]);
 
   const handleColorChange = (idx: number) => {
     setColorIdx(idx);
@@ -170,6 +197,38 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
             </div>
           )}
 
+          {measurementColumns(product).length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-graphite-600">Замеры, см</p>
+              <div className="overflow-x-auto rounded-lg border border-stone-100">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-stone-100 bg-stone-50">
+                      <th className="px-2.5 py-1.5 text-left text-xs font-medium text-graphite-500" />
+                      {measurementColumns(product).map((label) => (
+                        <th key={label} className="px-2 py-1.5 text-center text-xs font-medium text-graphite-500">
+                          {label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {product.measurements!.rows.map((rowLabel) => (
+                      <tr key={rowLabel} className="border-b border-stone-50 last:border-0">
+                        <td className="px-2.5 py-1 text-graphite-500">{rowLabel}</td>
+                        {measurementColumns(product).map((label) => (
+                          <td key={label} className="px-2 py-1 text-center font-medium text-graphite-800">
+                            {product.measurements!.values[rowLabel]?.[label] ?? '—'}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-graphite-600">Цвет: {color.name}</p>
             <div className="flex gap-2">
@@ -235,8 +294,11 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                     );
                   })}
                 </div>
+                {selectedRow && selectedSizeMeasurementLine && (
+                  <p className="mt-1.5 text-xs text-graphite-500">{selectedSizeMeasurementLine}</p>
+                )}
                 {selectedRow && (
-                  <p className="mt-1.5 text-xs text-graphite-500">В наличии: {selectedRow.stock} шт.</p>
+                  <p className="mt-1 text-xs text-graphite-500">В наличии: {selectedRow.stock} шт.</p>
                 )}
               </div>
 

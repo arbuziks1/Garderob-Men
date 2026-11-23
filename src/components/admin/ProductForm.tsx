@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
-import type { ColorVariant, Fit, Product, SizeFit, SizeStock } from '../../types';
+import type { ColorVariant, Fit, Product, ProductMeasurements, SizeFit, SizeStock } from '../../types';
 import { CATEGORIES, FITS, SIZE_FIT_LABEL, SIZE_FITS } from '../../types';
 import { BRAND_OPTIONS, COUNTRY_OPTIONS, MATERIAL_OPTIONS } from '../../data/productOptions';
 import { CATEGORY_CHARACTERISTIC_FIELDS, COMMON_CHARACTERISTIC_FIELDS, SEASON_OPTIONS } from '../../data/categoryCharacteristics';
-import { INT_TO_RU_EU, RU_EU_TO_INT, SIZE_GRID_PRESETS } from '../../data/sizeGrids';
+import { CATEGORY_MEASUREMENT_ROWS } from '../../data/measurements';
+import { distinctSizeLabels, INT_TO_RU_EU, RU_EU_TO_INT, SIZE_GRID_PRESETS } from '../../data/sizeGrids';
 import { api } from '../../services/api';
 import ImageField from './ImageField';
 import SearchableSelect from './SearchableSelect';
@@ -210,6 +211,56 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     setForm((f) => ({ ...f, colors: f.colors.filter((_, i) => i !== idx) }));
   };
 
+  const sizeLabels = distinctSizeLabels(form.colors);
+  const measurements: ProductMeasurements =
+    form.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[form.category] ?? [])], values: {} };
+
+  const setMeasurementCell = (rowLabel: string, sizeLabel: string, raw: string) => {
+    setForm((f) => {
+      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const rowValues = { ...(base.values[rowLabel] ?? {}) };
+      const num = Number(raw);
+      if (raw.trim() === '' || Number.isNaN(num)) {
+        delete rowValues[sizeLabel];
+      } else {
+        rowValues[sizeLabel] = num;
+      }
+      return { ...f, measurements: { ...base, values: { ...base.values, [rowLabel]: rowValues } } };
+    });
+  };
+
+  const addMeasurementRow = () => {
+    setForm((f) => {
+      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      return { ...f, measurements: { ...base, rows: [...base.rows, ''] } };
+    });
+  };
+
+  const renameMeasurementRow = (idx: number, newLabel: string) => {
+    setForm((f) => {
+      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const oldLabel = base.rows[idx];
+      const rows = base.rows.map((r, i) => (i === idx ? newLabel : r));
+      const values = { ...base.values };
+      if (oldLabel !== newLabel && oldLabel in values) {
+        values[newLabel] = values[oldLabel];
+        delete values[oldLabel];
+      }
+      return { ...f, measurements: { ...base, rows, values } };
+    });
+  };
+
+  const removeMeasurementRow = (idx: number) => {
+    setForm((f) => {
+      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const label = base.rows[idx];
+      const rows = base.rows.filter((_, i) => i !== idx);
+      const values = { ...base.values };
+      delete values[label];
+      return { ...f, measurements: { ...base, rows, values } };
+    });
+  };
+
   const handleSubmit = async () => {
     if (!form.title.trim()) {
       setError('Укажите название товара');
@@ -233,6 +284,23 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     );
     const characteristics = { ...(form.characteristics ?? {}), ...extraCharacteristics };
 
+    const cleanedMeasurements = (() => {
+      if (!form.measurements) return undefined;
+      const rows = form.measurements.rows.map((r) => r.trim()).filter(Boolean);
+      if (rows.length === 0) return undefined;
+      const currentLabels = new Set(distinctSizeLabels(form.colors));
+      const values: Record<string, Record<string, number>> = {};
+      for (const row of rows) {
+        const rowValues = form.measurements.values[row];
+        if (!rowValues) continue;
+        const filtered = Object.fromEntries(
+          Object.entries(rowValues).filter(([label, cm]) => currentLabels.has(label) && !Number.isNaN(cm))
+        );
+        if (Object.keys(filtered).length > 0) values[row] = filtered;
+      }
+      return { rows, values };
+    })();
+
     const cleaned = {
       title: form.title,
       category: form.category,
@@ -248,6 +316,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
       material: form.material,
       composition: form.composition,
       characteristics,
+      measurements: cleanedMeasurements,
       colors: form.colors.map((c) => ({
         name: c.name,
         hex: c.hex,
@@ -695,6 +764,77 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="border-t border-stone-200 pt-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="font-display text-sm font-semibold uppercase tracking-wide text-graphite-800">
+                  Замеры (в см)
+                </p>
+                <button
+                  onClick={addMeasurementRow}
+                  type="button"
+                  className="flex items-center gap-1 text-sm font-medium text-ember"
+                >
+                  <Plus size={14} /> Добавить строку
+                </button>
+              </div>
+
+              {sizeLabels.length === 0 ? (
+                <p className="text-sm text-graphite-400">
+                  Сначала добавьте размеры у цветов выше — тогда здесь появятся колонки для замеров.
+                </p>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-stone-200">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-stone-200 bg-stone-50">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-graphite-500">Параметр</th>
+                        {sizeLabels.map((label) => (
+                          <th key={label} className="px-2 py-2 text-center text-xs font-medium text-graphite-500">
+                            {label}
+                          </th>
+                        ))}
+                        <th className="w-8" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {measurements.rows.map((rowLabel, rowIdx) => (
+                        <tr key={rowIdx} className="border-b border-stone-100 last:border-0">
+                          <td className="px-2 py-1.5">
+                            <input
+                              value={rowLabel}
+                              onChange={(e) => renameMeasurementRow(rowIdx, e.target.value)}
+                              placeholder="Название параметра"
+                              className="input"
+                            />
+                          </td>
+                          {sizeLabels.map((sizeLabel) => (
+                            <td key={sizeLabel} className="px-1.5 py-1.5">
+                              <input
+                                type="number"
+                                min={0}
+                                value={measurements.values[rowLabel]?.[sizeLabel] ?? ''}
+                                onChange={(e) => setMeasurementCell(rowLabel, sizeLabel, e.target.value)}
+                                className="input w-16 text-center"
+                              />
+                            </td>
+                          ))}
+                          <td className="px-1.5 py-1.5 text-center">
+                            <button
+                              onClick={() => removeMeasurementRow(rowIdx)}
+                              type="button"
+                              className="rounded-md p-1.5 text-ember hover:bg-stone-100"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {error && <p className="text-sm text-ember">{error}</p>}

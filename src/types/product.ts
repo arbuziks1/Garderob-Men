@@ -34,6 +34,13 @@ export interface SizeStock {
   stock: number;
 }
 
+/** Замеры в см, keyed by the combined size label (see combinedSizeLabel in
+ *  data/sizeGrids.ts) so one table covers a size regardless of which color it's on. */
+export interface ProductMeasurements {
+  rows: string[];
+  values: Record<string, Record<string, number>>; // values[rowLabel][sizeLabel] = cm
+}
+
 export interface ColorVariant {
   id: string;
   name: string;
@@ -61,6 +68,7 @@ export interface Product {
   material?: string;
   composition?: string;
   characteristics?: Record<string, string>;
+  measurements?: ProductMeasurements;
 }
 
 export function totalStock(product: Product): number {

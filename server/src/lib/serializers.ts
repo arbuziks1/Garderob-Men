@@ -29,6 +29,9 @@ export function serializeProduct(product: ProductWithColors) {
     material: product.material ?? undefined,
     composition: product.composition ?? undefined,
     characteristics: (product.characteristics as Record<string, string> | null) ?? undefined,
+    measurements:
+      (product.measurements as { rows: string[]; values: Record<string, Record<string, number>> } | null) ??
+      undefined,
     createdAt: product.createdAt.toISOString(),
     colors: [...product.colors]
       .sort((a, b) => a.position - b.position)

@@ -77,6 +77,7 @@ interface ProductInput {
   material?: string;
   composition?: string;
   characteristics?: Record<string, string>;
+  measurements?: { rows: string[]; values: Record<string, Record<string, number>> };
 }
 
 function colorsCreateData(colors: ColorInput[]) {
@@ -140,6 +141,7 @@ adminProductsRouter.post('/', async (req, res) => {
           material: blankToNull(body.material),
           composition: blankToNull(body.composition),
           characteristics: body.characteristics ?? undefined,
+          measurements: body.measurements ?? undefined,
           colors: { create: colorsCreateData(body.colors) },
         },
         include,
@@ -185,6 +187,7 @@ adminProductsRouter.put('/:id', async (req, res) => {
           material: blankToNull(body.material),
           composition: blankToNull(body.composition),
           characteristics: body.characteristics ?? {},
+          measurements: body.measurements ?? {},
           colors: { create: colorsCreateData(body.colors) },
         },
         include,
