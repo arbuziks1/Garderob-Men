@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Camera, MapPin, Phone } from 'lucide-react';
 import type { StoreSettings } from '../../types';
+import PrivacyPolicyModal from './PrivacyPolicyModal';
 
 interface FooterProps {
   settings: StoreSettings;
@@ -7,6 +9,8 @@ interface FooterProps {
 }
 
 export default function Footer({ settings, onOpenAdmin }: FooterProps) {
+  const [policyOpen, setPolicyOpen] = useState(false);
+
   return (
     <footer className="mt-12 bg-graphite-950 text-stone-300">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -60,10 +64,15 @@ export default function Footer({ settings, onOpenAdmin }: FooterProps) {
           </div>
         </div>
 
-        <p className="mt-8 border-t border-graphite-800 pt-6 text-xs text-stone-500">
-          © {new Date().getFullYear()} GARDEROB MEN. Все права защищены.
-        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-graphite-800 pt-6 text-xs text-stone-500">
+          <p>© {new Date().getFullYear()} GARDEROB MEN. Все права защищены.</p>
+          <button onClick={() => setPolicyOpen(true)} className="underline underline-offset-2 hover:text-stone-300">
+            Политика конфиденциальности
+          </button>
+        </div>
       </div>
+
+      <PrivacyPolicyModal open={policyOpen} onClose={() => setPolicyOpen(false)} />
     </footer>
   );
 }

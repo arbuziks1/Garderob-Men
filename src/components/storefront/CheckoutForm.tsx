@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import type { CartItem, DeliveryMethod, Order, PaymentMethod } from '../../types';
 import { formatPrice } from '../../utils/format';
 import { storage } from '../../services/storage';
+import PrivacyPolicyModal from './PrivacyPolicyModal';
 
 interface CheckoutFormProps {
   items: CartItem[];
@@ -30,6 +31,8 @@ export default function CheckoutForm({
   const [delivery, setDelivery] = useState<DeliveryMethod>(DELIVERY_OPTIONS[0]);
   const [payment, setPayment] = useState<PaymentMethod>(PAYMENT_OPTIONS[0]);
   const [comment, setComment] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
@@ -41,6 +44,10 @@ export default function CheckoutForm({
     }
     if (!/^\+7\d{10}$/.test(phone.replace(/[\s()-]/g, ''))) {
       setError('Укажите телефон в формате +7XXXXXXXXXX');
+      return;
+    }
+    if (!consent) {
+      setError('Подтвердите согласие на обработку персональных данных');
       return;
     }
 
@@ -150,6 +157,28 @@ export default function CheckoutForm({
           />
         </div>
 
+        <label className="flex cursor-pointer items-start gap-2 text-sm text-graphite-700">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => {
+              setConsent(e.target.checked);
+              setError('');
+            }}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-graphite-950"
+          />
+          <span>
+            Согласен(на) на обработку персональных данных согласно{' '}
+            <button
+              type="button"
+              onClick={() => setPolicyOpen(true)}
+              className="underline underline-offset-2 hover:text-graphite-950"
+            >
+              Политике конфиденциальности
+            </button>
+          </span>
+        </label>
+
         {error && <p className="text-sm text-ember">{error}</p>}
 
         <div className="flex justify-between text-base font-semibold text-graphite-950">
@@ -173,6 +202,8 @@ export default function CheckoutForm({
           </button>
         </div>
       </div>
+
+      <PrivacyPolicyModal open={policyOpen} onClose={() => setPolicyOpen(false)} />
     </form>
   );
 }
