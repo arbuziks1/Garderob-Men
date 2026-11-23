@@ -154,6 +154,31 @@ export default function StoreSettingsManager() {
           </p>
         )}
 
+        <div className="mt-5 grid grid-cols-1 gap-4 border-t border-stone-200 pt-5 sm:grid-cols-2">
+          <Field label="Юридическое название (ИП/ТОО) — для оферты и модерации Kaspi Pay">
+            <input
+              value={form.legalName}
+              onChange={(e) => save({ ...form, legalName: e.target.value })}
+              placeholder="ИП Иванова Т.А."
+              className="input"
+            />
+          </Field>
+          <Field label="БИН / ИИН">
+            <input
+              value={form.businessId}
+              onChange={(e) => save({ ...form, businessId: e.target.value })}
+              placeholder="123456789012"
+              className="input"
+            />
+          </Field>
+        </div>
+        {(!form.legalName || !form.businessId) && (
+          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            Пока не заполнено — в публичной оферте вместо этих данных будет placeholder. Банк и закон требуют
+            указывать реальное юридическое название и БИН/ИИН до подачи заявки на приём платежей.
+          </p>
+        )}
+
         <p className="mb-2 mt-4 text-xs font-medium text-graphite-500">Часы работы</p>
         <div className="flex flex-col gap-2">
           {form.workingHours.map((wh, idx) => (

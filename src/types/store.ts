@@ -10,6 +10,8 @@ export interface StoreSettings {
   whatsappPhone: string;
   phoneDisplay: string;
   kaspiPayLink: string;
+  legalName: string;
+  businessId: string;
   instagramUrl: string;
   twoGisUrl: string;
   heroTitle: string;

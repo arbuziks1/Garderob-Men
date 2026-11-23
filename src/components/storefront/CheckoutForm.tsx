@@ -3,6 +3,7 @@ import type { CartItem, DeliveryMethod, Order, PaymentMethod } from '../../types
 import { formatPrice } from '../../utils/format';
 import { storage } from '../../services/storage';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
+import PublicOfferModal from './PublicOfferModal';
 
 interface CheckoutFormProps {
   items: CartItem[];
@@ -33,6 +34,7 @@ export default function CheckoutForm({
   const [comment, setComment] = useState('');
   const [consent, setConsent] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
@@ -201,9 +203,21 @@ export default function CheckoutForm({
             Подтвердить заказ
           </button>
         </div>
+
+        <p className="text-center text-xs text-graphite-400">
+          Нажимая «Подтвердить заказ», вы принимаете условия{' '}
+          <button
+            type="button"
+            onClick={() => setOfferOpen(true)}
+            className="underline underline-offset-2 hover:text-graphite-700"
+          >
+            Публичной оферты
+          </button>
+        </p>
       </div>
 
       <PrivacyPolicyModal open={policyOpen} onClose={() => setPolicyOpen(false)} />
+      <PublicOfferModal open={offerOpen} onClose={() => setOfferOpen(false)} />
     </form>
   );
 }
