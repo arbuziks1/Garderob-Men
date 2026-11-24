@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
+import { Heart } from 'lucide-react';
 import type { Product } from '../../types';
 import { isInStock } from '../../types';
 import { sortSizeLabels } from '../../data/sizeGrids';
 import { formatPrice } from '../../utils/format';
 import { EASE } from '../../utils/motion';
+import { useWishlist } from '../../contexts/WishlistContext';
 import SafeImage from '../shared/SafeImage';
 
 interface ProductCardProps {
@@ -35,17 +37,27 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
   const secondary = product.colors[0]?.images[1];
   const inStock = isInStock(product);
   const badges = sizeBadges(product);
+  const { isWishlisted, toggle } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
 
   return (
-    <motion.button
+    <motion.div
       layout
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.3, ease: EASE }}
-      className="group flex flex-col overflow-hidden rounded-sm border border-stone-200 bg-white text-left transition-colors duration-300 hover:border-graphite-400"
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-sm border border-stone-200 bg-white text-left transition-colors duration-300 hover:border-graphite-400"
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
         <motion.div
@@ -67,6 +79,16 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
             Sale
           </span>
         )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggle(product.id);
+          }}
+          aria-label={wishlisted ? 'Убрать из избранного' : 'Добавить в избранное'}
+          className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-graphite-700 shadow transition-colors hover:bg-white"
+        >
+          <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} className={wishlisted ? 'text-ember' : ''} />
+        </button>
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3.5">
@@ -108,6 +130,6 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
           <p className="pt-0.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">Нет в наличии</p>
         )}
       </div>
-    </motion.button>
+    </motion.div>
   );
 }

@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
 import type { OrderPublic } from '../types';
 import { ORDER_STATUS_LABEL } from '../types';
 import { api } from '../services/api';
+import { useSettings } from '../hooks/useStore';
+import { buildWhatsAppLink } from '../utils/whatsapp';
 import { formatDate, formatPrice } from '../utils/format';
 
 export default function OrderStatusPage() {
   const { id } = useParams<{ id: string }>();
+  const [settings] = useSettings();
   const [order, setOrder] = useState<OrderPublic | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [payError, setPayError] = useState('');
@@ -93,6 +97,16 @@ export default function OrderStatusPage() {
                 {payError && <p className="mt-2 text-xs text-ember">{payError}</p>}
               </div>
             )}
+
+            <a
+              href={buildWhatsAppLink(settings.whatsappPhone, `Здравствуйте! Вопрос по заказу №${order.id}.`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-sm border border-graphite-950 px-4 py-3 text-sm font-medium text-graphite-950 hover:bg-stone-50"
+            >
+              <MessageCircle size={16} />
+              Написать менеджеру в WhatsApp по этому заказу
+            </a>
           </div>
         )}
 

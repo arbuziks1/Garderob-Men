@@ -16,6 +16,8 @@ import CartDrawer from '../components/storefront/CartDrawer';
 import CartToast from '../components/storefront/CartToast';
 import FloatingCartBar from '../components/storefront/FloatingCartBar';
 import Footer from '../components/storefront/Footer';
+import WishlistDrawer from '../components/storefront/WishlistDrawer';
+import AccountDrawer from '../components/storefront/AccountDrawer';
 
 export default function StorefrontPage() {
   const [products] = useProducts();
@@ -122,6 +124,8 @@ export default function StorefrontPage() {
         {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
       </AnimatePresence>
       <CartDrawer />
+      <WishlistDrawer />
+      <AccountDrawer />
       <CartToast />
       <FloatingCartBar />
     </div>

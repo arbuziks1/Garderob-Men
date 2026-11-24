@@ -24,6 +24,15 @@ export interface OrderItem {
   quantity: number;
 }
 
+export interface DeliveryAddress {
+  city: string;
+  street: string;
+  house: string;
+  apartment?: string;
+  entrance?: string;
+  comment?: string;
+}
+
 export interface Order {
   id: string;
   createdAt: string;
@@ -43,6 +52,7 @@ export interface Order {
   paymentTransactionId?: string;
   fiscalReceiptNumber?: string;
   fiscalReceiptUrl?: string;
+  deliveryAddress?: DeliveryAddress;
 }
 
 /** Shape returned by the public /api/orders/:id lookup — deliberately omits PII. */

@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, MapPin, Menu, Search, ShoppingBag, X } from 'lucide-react';
+import { AtSign, Heart, MapPin, Menu, MessageCircle, Search, ShoppingBag, User, X } from 'lucide-react';
 import type { Category } from '../../types';
 import { CATEGORIES } from '../../types';
 import type { StoreSettings } from '../../types';
 import { useCart } from '../../contexts/CartContext';
+import { useWishlist } from '../../contexts/WishlistContext';
+import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { useHorizontalScroll } from '../../hooks/useHorizontalScroll';
+import { useSearchHistory } from '../../hooks/useSearchHistory';
+import { buildWhatsAppLink } from '../../utils/whatsapp';
 
 interface HeaderProps {
   settings: StoreSettings;
@@ -23,8 +27,27 @@ export default function Header({
   onSearchChange,
 }: HeaderProps) {
   const { itemCount, openDrawer } = useCart();
+  const { ids: wishlistIds, openDrawer: openWishlistDrawer } = useWishlist();
+  const { openDrawer: openAccountDrawer } = useCustomerAuth();
+  const { history, push: pushSearchHistory, clear: clearSearchHistory } = useSearchHistory();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const categoryNavRef = useHorizontalScroll<HTMLElement>();
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Record the query in "Вы недавно искали" once the person pauses typing, rather than on
+  // every keystroke (which would fill the recent list with partial strings).
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (!search.trim()) return;
+    searchDebounceRef.current = setTimeout(() => pushSearchHistory(search), 800);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  const supportLink = buildWhatsAppLink(settings.whatsappPhone, 'Здравствуйте! У меня вопрос по...');
 
   return (
     <header className="bg-graphite-950 text-paper shadow-lg shadow-black/20">
@@ -76,9 +99,36 @@ export default function Header({
             <input
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
+              onFocus={() => setShowHistory(true)}
+              onBlur={() => setTimeout(() => setShowHistory(false), 150)}
               placeholder="Поиск товаров..."
               className="w-40 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 pl-9 pr-3 text-sm text-paper placeholder:text-stone-500 focus:w-56 focus:border-stone-400 focus:outline-none transition-all md:w-56"
             />
+            {showHistory && search.trim() === '' && history.length > 0 && (
+              <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-sm border border-graphite-700 bg-graphite-900 py-1.5 text-stone-100 shadow-xl">
+                <p className="px-3 pb-1 text-[10px] uppercase tracking-wide text-stone-500">Вы недавно искали</p>
+                {history.map((q) => (
+                  <button
+                    key={q}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      onSearchChange(q);
+                      setShowHistory(false);
+                    }}
+                    className="block w-full px-3 py-1.5 text-left text-sm hover:bg-graphite-800"
+                  >
+                    {q}
+                  </button>
+                ))}
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => clearSearchHistory()}
+                  className="mt-1 block w-full border-t border-graphite-800 px-3 pt-1.5 text-left text-xs text-stone-400 hover:text-stone-100"
+                >
+                  Очистить
+                </button>
+              </div>
+            )}
           </div>
 
           <a
@@ -89,7 +139,7 @@ export default function Header({
             aria-label="Instagram"
             title="Instagram"
           >
-            <Camera size={19} />
+            <AtSign size={19} />
           </a>
           <a
             href={settings.twoGisUrl}
@@ -101,6 +151,48 @@ export default function Header({
           >
             <MapPin size={19} />
           </a>
+          <a
+            href={supportLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden rounded-md p-2 text-stone-300 hover:bg-graphite-800 sm:block"
+            aria-label="Поддержка в WhatsApp"
+            title="Поддержка"
+          >
+            <MessageCircle size={19} />
+          </a>
+
+          <button
+            onClick={openWishlistDrawer}
+            className="relative rounded-md p-2 text-stone-300 hover:bg-graphite-800"
+            aria-label="Избранное"
+            title="Избранное"
+          >
+            <Heart size={20} />
+            <AnimatePresence>
+              {wishlistIds.length > 0 && (
+                <motion.span
+                  key={wishlistIds.length}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.5, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-paper px-1 text-[10px] font-bold text-graphite-950"
+                >
+                  {wishlistIds.length}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+
+          <button
+            onClick={openAccountDrawer}
+            className="rounded-md p-2 text-stone-300 hover:bg-graphite-800"
+            aria-label="Мои заказы"
+            title="Мои заказы"
+          >
+            <User size={20} />
+          </button>
 
           <button
             onClick={openDrawer}
@@ -166,10 +258,13 @@ export default function Header({
           ))}
           <div className="mt-2 flex gap-3 border-t border-graphite-800 pt-3">
             <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
-              <Camera size={16} /> Instagram
+              <AtSign size={16} /> Instagram
             </a>
             <a href={settings.twoGisUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
               <MapPin size={16} /> 2ГИС
+            </a>
+            <a href={supportLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
+              <MessageCircle size={16} /> Поддержка
             </a>
           </div>
         </div>

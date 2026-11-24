@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 import type { Product, SizeStock } from '../../types';
 import { SIZE_FIT_LABEL } from '../../types';
 import { combinedSizeLabel } from '../../data/sizeGrids';
@@ -8,6 +8,7 @@ import { shortMeasurementLabel } from '../../data/measurements';
 import { formatPrice } from '../../utils/format';
 import { EASE } from '../../utils/motion';
 import { useCart } from '../../contexts/CartContext';
+import { useWishlist } from '../../contexts/WishlistContext';
 import SafeImage from '../shared/SafeImage';
 
 interface ProductModalProps {
@@ -52,6 +53,8 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
+  const { isWishlisted, toggle: toggleWishlist } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
 
   const color = product.colors[colorIdx];
   const image = color.images[imgIdx] ?? color.images[0];
@@ -156,8 +159,19 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
 
         <div className="flex flex-col gap-4 p-5 sm:w-1/2 sm:overflow-y-auto sm:p-6">
           <div>
-            <p className="text-xs uppercase tracking-wide text-graphite-500">{product.category}</p>
-            <h2 className="font-display text-xl font-semibold text-graphite-950">{product.title}</h2>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-graphite-500">{product.category}</p>
+                <h2 className="font-display text-xl font-semibold text-graphite-950">{product.title}</h2>
+              </div>
+              <button
+                onClick={() => toggleWishlist(product.id)}
+                aria-label={wishlisted ? 'Убрать из избранного' : 'Добавить в избранное'}
+                className="shrink-0 rounded-full p-1.5 text-graphite-700 hover:bg-stone-100"
+              >
+                <Heart size={20} fill={wishlisted ? 'currentColor' : 'none'} className={wishlisted ? 'text-ember' : ''} />
+              </button>
+            </div>
             <p className="mt-0.5 text-xs text-graphite-400">Артикул: {product.sku}</p>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="text-lg font-semibold text-graphite-950">{formatPrice(product.price)}</span>

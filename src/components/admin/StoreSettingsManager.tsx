@@ -218,6 +218,55 @@ export default function StoreSettingsManager() {
       </section>
 
       <section className="rounded-xl border border-stone-200 bg-white p-5">
+        <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-wide text-graphite-800">
+          Карта и бонусная программа
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Широта">
+            <input
+              type="number"
+              value={form.mapLat ?? ''}
+              onChange={(e) => save({ ...form, mapLat: e.target.value === '' ? null : Number(e.target.value) })}
+              className="input"
+            />
+          </Field>
+          <Field label="Долгота">
+            <input
+              type="number"
+              value={form.mapLng ?? ''}
+              onChange={(e) => save({ ...form, mapLng: e.target.value === '' ? null : Number(e.target.value) })}
+              className="input"
+            />
+          </Field>
+        </div>
+        <p className="mt-2 text-xs text-graphite-500">
+          Найдите магазин на Яндекс.Картах или 2ГИС, кликните правой кнопкой по точке — координаты скопируются.
+        </p>
+
+        <div className="mt-5 flex flex-col gap-3 border-t border-stone-200 pt-5">
+          <label className="flex items-center gap-2 text-sm text-graphite-700">
+            <input
+              type="checkbox"
+              checked={form.bonusEnabled}
+              onChange={(e) => save({ ...form, bonusEnabled: e.target.checked })}
+              className="h-4 w-4 accent-graphite-950"
+            />
+            Бонусная программа включена
+          </label>
+          {form.bonusEnabled && (
+            <Field label="Процент кэшбэка">
+              <input
+                type="number"
+                value={form.bonusPercent}
+                onChange={(e) => save({ ...form, bonusPercent: Number(e.target.value) })}
+                className="input w-32"
+              />
+            </Field>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-stone-200 bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-graphite-800">
             Промокоды

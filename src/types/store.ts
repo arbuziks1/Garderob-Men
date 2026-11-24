@@ -18,6 +18,10 @@ export interface StoreSettings {
   heroSubtitle: string;
   heroImage: string;
   heroCtaLabel: string;
+  mapLat: number | null;
+  mapLng: number | null;
+  bonusEnabled: boolean;
+  bonusPercent: number;
 }
 
 export interface PromoCode {

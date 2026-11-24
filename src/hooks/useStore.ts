@@ -17,6 +17,10 @@ const EMPTY_SETTINGS: StoreSettings = {
   heroSubtitle: '',
   heroImage: '',
   heroCtaLabel: '',
+  mapLat: null,
+  mapLng: null,
+  bonusEnabled: false,
+  bonusPercent: 0,
 };
 
 export function useProducts(): [Product[], () => void] {

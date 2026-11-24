@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Camera, MapPin, Phone } from 'lucide-react';
+import { AtSign, MapPin, MessageCircle, Phone } from 'lucide-react';
 import type { StoreSettings } from '../../types';
+import { buildWhatsAppLink } from '../../utils/whatsapp';
 
 interface FooterProps {
   settings: StoreSettings;
@@ -41,7 +42,7 @@ export default function Footer({ settings }: FooterProps) {
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm hover:text-paper"
             >
-              <Camera size={16} /> Instagram
+              <AtSign size={16} /> Instagram
             </a>
             <a
               href={settings.twoGisUrl}
@@ -50,6 +51,14 @@ export default function Footer({ settings }: FooterProps) {
               className="flex items-center gap-2 text-sm hover:text-paper"
             >
               <MapPin size={16} /> Открыть на карте 2ГИС
+            </a>
+            <a
+              href={buildWhatsAppLink(settings.whatsappPhone, 'Здравствуйте! У меня вопрос по...')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm hover:text-paper"
+            >
+              <MessageCircle size={16} /> Поддержка в WhatsApp
             </a>
             <Link
               to="/admin"
