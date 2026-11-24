@@ -4,7 +4,7 @@ import path from 'node:path';
 import { Router } from 'express';
 import multer from 'multer';
 import sharp from 'sharp';
-import type { SizeFit } from '@prisma/client';
+import { Prisma, type SizeFit } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { LABEL_TO_CATEGORY, LABEL_TO_FIT } from '../lib/labels';
 import { serializeProduct } from '../lib/serializers';
@@ -199,7 +199,7 @@ adminProductsRouter.put('/:id', async (req, res) => {
           material: blankToNull(body.material),
           composition: blankToNull(body.composition),
           characteristics: body.characteristics ?? {},
-          measurements: body.measurements ?? {},
+          measurements: body.measurements ?? Prisma.JsonNull,
           colors: { create: colorsCreateData(body.colors) },
         },
         include,

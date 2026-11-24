@@ -38,10 +38,10 @@ function labelFor(row: SizeStock, grid: Grid): string {
  *  in the order the rows were entered (stable, no re-sort needed — the admin table
  *  already orders them left to right the way it was filled). */
 function measurementColumns(product: Product): string[] {
-  if (!product.measurements) return [];
+  if (!product.measurements || !Array.isArray(product.measurements.rows)) return [];
   const set = new Set<string>();
   for (const row of product.measurements.rows) {
-    for (const label of Object.keys(product.measurements.values[row] ?? {})) set.add(label);
+    for (const label of Object.keys(product.measurements.values?.[row] ?? {})) set.add(label);
   }
   return [...set];
 }
@@ -69,11 +69,11 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   const canAdd = selectedRow !== null && selectedRow.stock > 0;
 
   const selectedSizeMeasurementLine = useMemo(() => {
-    if (!selectedRow || !product.measurements) return null;
+    if (!selectedRow || !product.measurements || !Array.isArray(product.measurements.rows)) return null;
     const sizeLabel = combinedSizeLabel(selectedRow);
     const parts = product.measurements.rows
       .map((rowLabel) => {
-        const cm = product.measurements!.values[rowLabel]?.[sizeLabel];
+        const cm = product.measurements!.values?.[rowLabel]?.[sizeLabel];
         return cm !== undefined ? `${shortMeasurementLabel(rowLabel)} ${cm} см` : null;
       })
       .filter((p): p is string => p !== null);
@@ -232,7 +232,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                         <td className="px-2.5 py-1 text-graphite-500">{rowLabel}</td>
                         {measurementColumns(product).map((label) => (
                           <td key={label} className="px-2 py-1 text-center font-medium text-graphite-800">
-                            {product.measurements!.values[rowLabel]?.[label] ?? '—'}
+                            {product.measurements!.values?.[rowLabel]?.[label] ?? '—'}
                           </td>
                         ))}
                       </tr>

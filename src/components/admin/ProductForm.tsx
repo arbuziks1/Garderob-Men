@@ -66,6 +66,16 @@ function extraRowsFromProduct(product: Product | null): ExtraRow[] {
     .map(([key, value], idx) => ({ id: `row${idx}`, key, value }));
 }
 
+function normalizeMeasurements(
+  measurements: ProductMeasurements | undefined,
+  category: Product['category']
+): ProductMeasurements {
+  if (measurements && Array.isArray(measurements.rows) && measurements.values && typeof measurements.values === 'object') {
+    return measurements;
+  }
+  return { rows: [...(CATEGORY_MEASUREMENT_ROWS[category] ?? [])], values: {} };
+}
+
 export default function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
   const [form, setForm] = useState<Product>(product ? structuredClone(product) : emptyProduct());
   const [extraRows, setExtraRows] = useState<ExtraRow[]>(extraRowsFromProduct(product));
@@ -212,12 +222,11 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
   };
 
   const sizeLabels = distinctSizeLabels(form.colors);
-  const measurements: ProductMeasurements =
-    form.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[form.category] ?? [])], values: {} };
+  const measurements: ProductMeasurements = normalizeMeasurements(form.measurements, form.category);
 
   const setMeasurementCell = (rowLabel: string, sizeLabel: string, raw: string) => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = normalizeMeasurements(f.measurements, f.category);
       const rowValues = { ...(base.values[rowLabel] ?? {}) };
       const num = Number(raw);
       if (raw.trim() === '' || Number.isNaN(num)) {
@@ -231,14 +240,14 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
   const addMeasurementRow = () => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = normalizeMeasurements(f.measurements, f.category);
       return { ...f, measurements: { ...base, rows: [...base.rows, ''] } };
     });
   };
 
   const renameMeasurementRow = (idx: number, newLabel: string) => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = normalizeMeasurements(f.measurements, f.category);
       const oldLabel = base.rows[idx];
       const rows = base.rows.map((r, i) => (i === idx ? newLabel : r));
       const values = { ...base.values };
@@ -252,7 +261,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
   const removeMeasurementRow = (idx: number) => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = normalizeMeasurements(f.measurements, f.category);
       const label = base.rows[idx];
       const rows = base.rows.filter((_, i) => i !== idx);
       const values = { ...base.values };
@@ -285,13 +294,13 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     const characteristics = { ...(form.characteristics ?? {}), ...extraCharacteristics };
 
     const cleanedMeasurements = (() => {
-      if (!form.measurements) return undefined;
+      if (!form.measurements || !Array.isArray(form.measurements.rows)) return undefined;
       const rows = form.measurements.rows.map((r) => r.trim()).filter(Boolean);
       if (rows.length === 0) return undefined;
       const currentLabels = new Set(distinctSizeLabels(form.colors));
       const values: Record<string, Record<string, number>> = {};
       for (const row of rows) {
-        const rowValues = form.measurements.values[row];
+        const rowValues = form.measurements.values?.[row];
         if (!rowValues) continue;
         const filtered = Object.fromEntries(
           Object.entries(rowValues).filter(([label, cm]) => currentLabels.has(label) && !Number.isNaN(cm))
