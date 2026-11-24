@@ -48,6 +48,7 @@ publicRouter.post('/orders', async (req, res) => {
       total?: number;
       comment?: string;
       consentGiven?: boolean;
+      deliveryAddress?: { city: string; street: string; house: string; apartment?: string; entrance?: string; comment?: string };
     };
 
     if (!body.customerName || !body.phone || !body.delivery || !body.payment) {
@@ -75,6 +76,7 @@ publicRouter.post('/orders', async (req, res) => {
       total: body.total ?? 0,
       comment: body.comment,
       consentGiven: body.consentGiven,
+      deliveryAddress: body.deliveryAddress,
     });
 
     res.status(201).json(serializeOrderFull(order));

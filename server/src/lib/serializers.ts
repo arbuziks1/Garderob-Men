@@ -86,6 +86,7 @@ export function serializeOrderFull(order: OrderWithItems) {
     // it to a Russian label itself, per the plan agreed with the user.
     status: order.status,
     comment: order.comment ?? undefined,
+    deliveryAddress: (order.deliveryAddress as Record<string, string> | null) ?? undefined,
     consentGiven: order.consentGiven,
     consentGivenAt: order.consentGivenAt?.toISOString(),
     paymentTransactionId: order.paymentTransactionId ?? undefined,

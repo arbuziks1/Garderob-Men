@@ -17,7 +17,12 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
     return;
   }
   try {
-    req.admin = verifyAdminToken(header.slice('Bearer '.length));
+    const payload = verifyAdminToken(header.slice('Bearer '.length));
+    if (payload.typ !== 'admin') {
+      res.status(401).json({ error: 'Invalid or expired token' });
+      return;
+    }
+    req.admin = payload;
     next();
   } catch {
     res.status(401).json({ error: 'Invalid or expired token' });

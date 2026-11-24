@@ -9,6 +9,7 @@ import { adminOrdersRouter } from './routes/adminOrders';
 import { adminProductsRouter } from './routes/adminProducts';
 import { adminPromoCodesRouter } from './routes/adminPromoCodes';
 import { adminSettingsRouter } from './routes/adminSettings';
+import { customerRouter } from './routes/customer';
 import { publicRouter } from './routes/public';
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/admin/orders', requireAdmin, adminOrdersRouter);
 app.use('/api/admin/settings', requireAdmin, adminSettingsRouter);
 app.use('/api/admin/promo-codes', requireAdmin, adminPromoCodesRouter);
 app.use('/api/admin', requireAdmin, adminMiscRouter);
+app.use('/api/customer', customerRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });

@@ -147,6 +147,9 @@ model Order {
   consentGiven   Boolean   @default(false)
   consentGivenAt DateTime?
 
+  // Structured delivery address; present only for DELIVERY orders, null for self-pickup.
+  deliveryAddress Json?
+
   paymentTransactionId String?
   fiscalReceiptNumber  String?
   fiscalReceiptUrl     String?
@@ -198,6 +201,14 @@ model StoreSettings {
   heroSubtitle  String
   heroImage     String
   heroCtaLabel  String
+
+  // Coordinates for an embeddable store-location map widget — nullable, owner may leave unset.
+  mapLat Float?
+  mapLng Float?
+
+  // Cashback program toggle + percent, shown as a customer's bonus balance in /api/customer/orders.
+  bonusEnabled Boolean @default(false)
+  bonusPercent Int     @default(0)
 }
 
 model PromoCode {
@@ -210,6 +221,13 @@ model PromoCode {
 model AdminUser {
   id           String   @id @default(cuid())
   email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  phone        String   @unique // normalized digits only, see lib/phone.ts
   passwordHash String
   createdAt    DateTime @default(now())
 }

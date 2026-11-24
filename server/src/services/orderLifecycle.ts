@@ -31,6 +31,7 @@ export interface CreateOrderInput {
   total: number;
   comment?: string;
   consentGiven: boolean;
+  deliveryAddress?: { city: string; street: string; house: string; apartment?: string; entrance?: string; comment?: string };
 }
 
 /**
@@ -98,6 +99,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { it
         promoCode: input.promoCode,
         total: input.total,
         comment: input.comment,
+        deliveryAddress: input.deliveryAddress ?? undefined,
         consentGiven: input.consentGiven,
         consentGivenAt: input.consentGiven ? new Date() : null,
         status: 'PENDING_PAYMENT',
