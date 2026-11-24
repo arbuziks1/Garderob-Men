@@ -14,8 +14,13 @@ interface BranchInput {
 }
 
 adminBranchesRouter.get('/', async (_req, res) => {
-  const branches = await prisma.pickupBranch.findMany({ orderBy: { position: 'asc' } });
-  res.json(branches);
+  try {
+    const branches = await prisma.pickupBranch.findMany({ orderBy: { position: 'asc' } });
+    res.json(branches);
+  } catch (err) {
+    console.error('GET /api/admin/branches failed:', err);
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 adminBranchesRouter.post('/', async (req, res) => {
