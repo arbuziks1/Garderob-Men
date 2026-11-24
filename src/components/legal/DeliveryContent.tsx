@@ -1,7 +1,8 @@
-import { useSettings } from '../../hooks/useStore';
+import { useBranches, useSettings } from '../../hooks/useStore';
 
 export default function DeliveryContent() {
   const [settings] = useSettings();
+  const [branches] = useBranches();
 
   return (
     <>
@@ -10,14 +11,19 @@ export default function DeliveryContent() {
       </h3>
       <ul className="mb-4 list-disc pl-5">
         <li className="mb-1">
-          <strong>Самовывоз из магазина.</strong> {settings.address}. Часы работы:{' '}
-          {settings.workingHours.map((wh, i) => (
-            <span key={i}>
-              {wh.days} {wh.hours}
-              {i < settings.workingHours.length - 1 ? ', ' : ''}
+          <strong>Самовывоз из магазина.</strong>{' '}
+          {branches.map((branch, bi) => (
+            <span key={branch.id}>
+              {branch.name}: {branch.address}. Часы работы:{' '}
+              {branch.workingHours.map((wh, i) => (
+                <span key={i}>
+                  {wh.days} {wh.hours}
+                  {i < branch.workingHours.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+              {bi < branches.length - 1 ? '; ' : '.'}
             </span>
           ))}
-          .
         </li>
         <li>
           <strong>Доставка по Усть-Каменогорску.</strong> Срок и стоимость доставки уточняются менеджером
@@ -76,7 +82,7 @@ export default function DeliveryContent() {
       </h3>
       <p className="mb-3">
         Напишите или позвоните по телефону {settings.phoneDisplay}, укажите номер заказа и причину
-        обращения — мы согласуем удобный способ возврата (в магазине по адресу {settings.address} либо иначе
+        обращения — мы согласуем удобный способ возврата (в одном из наших магазинов либо иначе
         по договорённости).
       </p>
 

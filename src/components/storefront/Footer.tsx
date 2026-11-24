@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AtSign, MapPin, MessageCircle, Phone } from 'lucide-react';
 import type { StoreSettings } from '../../types';
+import { useBranches } from '../../hooks/useStore';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 
 interface FooterProps {
@@ -8,6 +9,8 @@ interface FooterProps {
 }
 
 export default function Footer({ settings }: FooterProps) {
+  const [branches] = useBranches();
+
   return (
     <footer className="mt-12 bg-graphite-950 text-stone-300">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -19,19 +22,35 @@ export default function Footer({ settings }: FooterProps) {
             <p className="mt-2 text-sm">Мужская одежда в Усть-Каменогорске.</p>
           </div>
 
-          <div className="flex flex-col gap-2 text-sm">
-            <p className="flex items-start gap-2">
-              <MapPin size={16} className="mt-0.5 shrink-0" />
-              {settings.address}
-            </p>
+          <div className="flex flex-col gap-3 text-sm">
             <p className="flex items-center gap-2">
               <Phone size={16} className="shrink-0" />
               {settings.phoneDisplay}
             </p>
-            {settings.workingHours.map((wh, i) => (
-              <p key={i} className="pl-6 text-stone-400">
-                {wh.days}: {wh.hours}
-              </p>
+            {branches.map((branch) => (
+              <div key={branch.id} className="flex items-start gap-2">
+                <MapPin size={16} className="mt-0.5 shrink-0" />
+                <div>
+                  <p>
+                    {branch.name} — {branch.address}
+                  </p>
+                  {branch.workingHours.map((wh, i) => (
+                    <p key={i} className="text-stone-400">
+                      {wh.days}: {wh.hours}
+                    </p>
+                  ))}
+                  {branch.twoGisUrl && (
+                    <a
+                      href={branch.twoGisUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-stone-400 underline underline-offset-2 hover:text-paper"
+                    >
+                      Открыть в 2ГИС
+                    </a>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
 
@@ -43,14 +62,6 @@ export default function Footer({ settings }: FooterProps) {
               className="flex items-center gap-2 text-sm hover:text-paper"
             >
               <AtSign size={16} /> Instagram
-            </a>
-            <a
-              href={settings.twoGisUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm hover:text-paper"
-            >
-              <MapPin size={16} /> Открыть на карте 2ГИС
             </a>
             <a
               href={buildWhatsAppLink(settings.whatsappPhone, 'Здравствуйте! У меня вопрос по...')}

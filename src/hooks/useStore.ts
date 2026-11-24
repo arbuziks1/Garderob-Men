@@ -1,24 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Order, PromoCode, Product, StoreSettings } from '../types';
+import type { Order, PickupBranch, PromoCode, Product, StoreSettings } from '../types';
 import { api } from '../services/api';
 
 const EMPTY_SETTINGS: StoreSettings = {
   storeName: '',
-  address: '',
-  workingHours: [],
   whatsappPhone: '',
   phoneDisplay: '',
   kaspiPayLink: '',
   legalName: '',
   businessId: '',
   instagramUrl: '',
-  twoGisUrl: '',
   heroTitle: '',
   heroSubtitle: '',
   heroImage: '',
   heroCtaLabel: '',
-  mapLat: null,
-  mapLng: null,
   bonusEnabled: false,
   bonusPercent: 0,
 };
@@ -57,4 +52,22 @@ export function useAdminPromoCodes(): [PromoCode[], () => void] {
   }, []);
   useEffect(refresh, [refresh]);
   return [codes, refresh];
+}
+
+export function useBranches(): [PickupBranch[], () => void] {
+  const [branches, setBranches] = useState<PickupBranch[]>([]);
+  const refresh = useCallback(() => {
+    api.getBranches().then(setBranches).catch(() => {});
+  }, []);
+  useEffect(refresh, [refresh]);
+  return [branches, refresh];
+}
+
+export function useAdminBranches(): [PickupBranch[], () => void] {
+  const [branches, setBranches] = useState<PickupBranch[]>([]);
+  const refresh = useCallback(() => {
+    api.getAdminBranches().then(setBranches).catch(() => {});
+  }, []);
+  useEffect(refresh, [refresh]);
+  return [branches, refresh];
 }

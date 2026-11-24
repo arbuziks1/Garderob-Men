@@ -92,6 +92,17 @@ export default function OrdersManager() {
                         <p className="text-xs font-semibold uppercase tracking-wide text-graphite-500">Доставка и оплата</p>
                         <p className="text-graphite-800">{order.delivery}</p>
                         <p className="text-graphite-800">{order.payment}</p>
+                        {order.pickupBranchName && (
+                          <p className="text-graphite-800">Филиал: {order.pickupBranchName}</p>
+                        )}
+                        {order.deliveryAddress && (
+                          <p className="text-graphite-800">
+                            {order.deliveryAddress.city}, {order.deliveryAddress.street} {order.deliveryAddress.house}
+                            {order.deliveryAddress.apartment ? `, кв./офис ${order.deliveryAddress.apartment}` : ''}
+                            {order.deliveryAddress.entrance ? `, подъезд/этаж ${order.deliveryAddress.entrance}` : ''}
+                            {order.deliveryAddress.comment ? ` (${order.deliveryAddress.comment})` : ''}
+                          </p>
+                        )}
                       </div>
                     </div>
 

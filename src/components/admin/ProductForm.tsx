@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
-import type { ColorVariant, Fit, Product, ProductMeasurements, SizeFit, SizeStock } from '../../types';
+import type { ColorVariant, Fit, PickupBranch, Product, ProductMeasurements, SizeFit, SizeStock } from '../../types';
 import { CATEGORIES, FITS, SIZE_FIT_LABEL, SIZE_FITS } from '../../types';
 import { BRAND_OPTIONS, COUNTRY_OPTIONS, MATERIAL_OPTIONS } from '../../data/productOptions';
 import { CATEGORY_CHARACTERISTIC_FIELDS, COMMON_CHARACTERISTIC_FIELDS, SEASON_OPTIONS } from '../../data/categoryCharacteristics';
 import { CATEGORY_MEASUREMENT_ROWS } from '../../data/measurements';
 import { distinctSizeLabels, INT_TO_RU_EU, RU_EU_TO_INT, SIZE_GRID_PRESETS } from '../../data/sizeGrids';
+import { useBranches } from '../../hooks/useStore';
 import { api } from '../../services/api';
 import ImageField from './ImageField';
 import SearchableSelect from './SearchableSelect';
@@ -17,21 +18,34 @@ interface ProductFormProps {
   onSaved: () => void;
 }
 
-function emptySizeRow(): SizeStock {
-  return { id: `temp-${crypto.randomUUID()}`, stock: 0 };
+function emptyBranchStocks(branches: PickupBranch[]): SizeStock['branchStocks'] {
+  return branches.map((b) => ({ branchId: b.id, branchName: b.name, stock: 0 }));
 }
 
-function emptyColor(): ColorVariant {
+/** Fills in a zero-stock entry for any branch the row doesn't have yet (e.g. a branch
+ *  created after this product was last saved) without touching existing values. */
+function reconcileBranchStocks(row: SizeStock, branches: PickupBranch[]): SizeStock['branchStocks'] {
+  return branches.map((b) => {
+    const existing = row.branchStocks?.find((bs) => bs.branchId === b.id);
+    return { branchId: b.id, branchName: b.name, stock: existing?.stock ?? 0 };
+  });
+}
+
+function emptySizeRow(branches: PickupBranch[]): SizeStock {
+  return { id: `temp-${crypto.randomUUID()}`, stock: 0, branchStocks: emptyBranchStocks(branches) };
+}
+
+function emptyColor(branches: PickupBranch[]): ColorVariant {
   return {
     id: `c-${crypto.randomUUID()}`,
     name: 'Новый цвет',
     hex: '#27272a',
     images: [''],
-    sizes: [emptySizeRow()],
+    sizes: [emptySizeRow(branches)],
   };
 }
 
-function emptyProduct(): Product {
+function emptyProduct(branches: PickupBranch[]): Product {
   return {
     id: `p${Date.now()}`,
     sku: '',
@@ -40,7 +54,7 @@ function emptyProduct(): Product {
     fit: 'Regular',
     price: 0,
     description: '',
-    colors: [emptyColor()],
+    colors: [emptyColor(branches)],
     createdAt: new Date().toISOString(),
   };
 }
@@ -67,7 +81,8 @@ function extraRowsFromProduct(product: Product | null): ExtraRow[] {
 }
 
 export default function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
-  const [form, setForm] = useState<Product>(product ? structuredClone(product) : emptyProduct());
+  const [branches] = useBranches();
+  const [form, setForm] = useState<Product>(product ? structuredClone(product) : emptyProduct(branches));
   const [extraRows, setExtraRows] = useState<ExtraRow[]>(extraRowsFromProduct(product));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -80,6 +95,21 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     const timer = setTimeout(() => setJustAddedColorId(null), 1200);
     return () => clearTimeout(timer);
   }, [justAddedColorId]);
+
+  // Backfill a zero-stock entry for any branch a row doesn't have yet — covers a branch
+  // created after this product was last saved, or the form having mounted before the
+  // branch list finished loading.
+  useEffect(() => {
+    if (branches.length === 0) return;
+    setForm((f) => ({
+      ...f,
+      colors: f.colors.map((c) => ({
+        ...c,
+        sizes: c.sizes.map((s) => ({ ...s, branchStocks: reconcileBranchStocks(s, branches) })),
+      })),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branches]);
 
   const updateExtraRow = (id: string, patch: Partial<Pick<ExtraRow, 'key' | 'value'>>) => {
     setExtraRows((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -134,10 +164,49 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     }));
   };
 
+  const updateBranchStock = (colorIdx: number, sizeIdx: number, branchId: string, stock: number) => {
+    setForm((f) => ({
+      ...f,
+      colors: f.colors.map((c, ci) => {
+        if (ci !== colorIdx) return c;
+        return {
+          ...c,
+          sizes: c.sizes.map((s, si) => {
+            if (si !== sizeIdx) return s;
+            return {
+              ...s,
+              branchStocks: s.branchStocks.map((bs) => (bs.branchId === branchId ? { ...bs, stock } : bs)),
+            };
+          }),
+        };
+      }),
+    }));
+  };
+
+  /** "Есть на всех точках" — copies the first branch column's value into every other
+   *  branch column for this row, so a product in stock everywhere doesn't need the same
+   *  number typed N times. */
+  const copyStockEverywhere = (colorIdx: number, sizeIdx: number) => {
+    setForm((f) => ({
+      ...f,
+      colors: f.colors.map((c, ci) => {
+        if (ci !== colorIdx) return c;
+        return {
+          ...c,
+          sizes: c.sizes.map((s, si) => {
+            if (si !== sizeIdx) return s;
+            const value = s.branchStocks[0]?.stock ?? 0;
+            return { ...s, branchStocks: s.branchStocks.map((bs) => ({ ...bs, stock: value })) };
+          }),
+        };
+      }),
+    }));
+  };
+
   const addSizeRow = (colorIdx: number) => {
     setForm((f) => ({
       ...f,
-      colors: f.colors.map((c, ci) => (ci === colorIdx ? { ...c, sizes: [...c.sizes, emptySizeRow()] } : c)),
+      colors: f.colors.map((c, ci) => (ci === colorIdx ? { ...c, sizes: [...c.sizes, emptySizeRow(branches)] } : c)),
     }));
   };
 
@@ -155,7 +224,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     const preset = SIZE_GRID_PRESETS.find((p) => p.label === presetLabel);
     if (!preset) return;
     const color = form.colors[colorIdx];
-    const hasStock = color.sizes.some((s) => s.stock > 0);
+    const hasStock = color.sizes.some((s) => s.branchStocks.some((bs) => bs.stock > 0));
     if (
       hasStock &&
       !window.confirm('У этого цвета уже заполнены остатки. Заменить размеры пресетом (остатки обнулятся)?')
@@ -168,6 +237,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
       sizeEu: row.sizeEu,
       sizeInt: row.sizeInt,
       stock: 0,
+      branchStocks: emptyBranchStocks(branches),
     }));
     setForm((f) => ({
       ...f,
@@ -201,7 +271,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
   };
 
   const addColor = () => {
-    const color = emptyColor();
+    const color = emptyColor(branches);
     setForm((f) => ({ ...f, colors: [...f.colors, color] }));
     setJustAddedColorId(color.id);
   };
@@ -213,11 +283,11 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
   const sizeLabels = distinctSizeLabels(form.colors);
   const measurements: ProductMeasurements =
-    form.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[form.category] ?? [])], values: {} };
+    form.measurements?.rows ? form.measurements : { rows: [...(CATEGORY_MEASUREMENT_ROWS[form.category] ?? [])], values: {} };
 
   const setMeasurementCell = (rowLabel: string, sizeLabel: string, raw: string) => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = f.measurements?.rows ? f.measurements : { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
       const rowValues = { ...(base.values[rowLabel] ?? {}) };
       const num = Number(raw);
       if (raw.trim() === '' || Number.isNaN(num)) {
@@ -231,14 +301,14 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
   const addMeasurementRow = () => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = f.measurements?.rows ? f.measurements : { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
       return { ...f, measurements: { ...base, rows: [...base.rows, ''] } };
     });
   };
 
   const renameMeasurementRow = (idx: number, newLabel: string) => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = f.measurements?.rows ? f.measurements : { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
       const oldLabel = base.rows[idx];
       const rows = base.rows.map((r, i) => (i === idx ? newLabel : r));
       const values = { ...base.values };
@@ -252,7 +322,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
   const removeMeasurementRow = (idx: number) => {
     setForm((f) => {
-      const base = f.measurements ?? { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
+      const base = f.measurements?.rows ? f.measurements : { rows: [...(CATEGORY_MEASUREMENT_ROWS[f.category] ?? [])], values: {} };
       const label = base.rows[idx];
       const rows = base.rows.filter((_, i) => i !== idx);
       const values = { ...base.values };
@@ -285,7 +355,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
     const characteristics = { ...(form.characteristics ?? {}), ...extraCharacteristics };
 
     const cleanedMeasurements = (() => {
-      if (!form.measurements) return undefined;
+      if (!form.measurements?.rows) return undefined;
       const rows = form.measurements.rows.map((r) => r.trim()).filter(Boolean);
       if (rows.length === 0) return undefined;
       const currentLabels = new Set(distinctSizeLabels(form.colors));
@@ -327,7 +397,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
             sizeRu: s.sizeRu?.trim() || undefined,
             sizeEu: s.sizeEu?.trim() || undefined,
             sizeInt: s.sizeInt?.trim() || undefined,
-            stock: s.stock,
+            branchStocks: s.branchStocks.map((bs) => ({ branchId: bs.branchId, stock: bs.stock })),
           })),
       })),
     };
@@ -707,16 +777,32 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                      <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5 px-1 text-[10px] font-medium uppercase tracking-wide text-graphite-400">
+                    <div className="flex flex-col gap-1.5 overflow-x-auto">
+                      <div
+                        className="grid items-center gap-1.5 px-1 text-[10px] font-medium uppercase tracking-wide text-graphite-400"
+                        style={{
+                          gridTemplateColumns: `3rem 3rem 3rem ${branches.map(() => '5rem').join(' ')} auto auto`,
+                        }}
+                      >
                         <span>RU</span>
                         <span>EU</span>
                         <span>INT</span>
-                        <span>Остаток</span>
+                        {branches.map((b) => (
+                          <span key={b.id} className="truncate text-center" title={b.name}>
+                            {b.name}
+                          </span>
+                        ))}
+                        <span />
                         <span />
                       </div>
                       {color.sizes.map((sizeRow, sizeIdx) => (
-                        <div key={sizeRow.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-1.5">
+                        <div
+                          key={sizeRow.id}
+                          className="grid items-center gap-1.5"
+                          style={{
+                            gridTemplateColumns: `3rem 3rem 3rem ${branches.map(() => '5rem').join(' ')} auto auto`,
+                          }}
+                        >
                           <input
                             value={sizeRow.sizeRu ?? ''}
                             onChange={(e) => updateSizeRow(colorIdx, sizeIdx, { sizeRu: e.target.value })}
@@ -735,15 +821,30 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
                             placeholder="M"
                             className="input text-center"
                           />
-                          <input
-                            type="number"
-                            min={0}
-                            value={sizeRow.stock}
-                            onChange={(e) =>
-                              updateSizeRow(colorIdx, sizeIdx, { stock: Math.max(0, Number(e.target.value)) })
-                            }
-                            className="input text-center"
-                          />
+                          {branches.map((b) => {
+                            const bs = sizeRow.branchStocks.find((x) => x.branchId === b.id);
+                            return (
+                              <input
+                                key={b.id}
+                                type="number"
+                                min={0}
+                                value={bs?.stock ?? 0}
+                                onChange={(e) =>
+                                  updateBranchStock(colorIdx, sizeIdx, b.id, Math.max(0, Number(e.target.value)))
+                                }
+                                className="input text-center"
+                              />
+                            );
+                          })}
+                          <button
+                            onClick={() => copyStockEverywhere(colorIdx, sizeIdx)}
+                            type="button"
+                            title="Есть на всех точках — скопировать значение первой точки во все остальные"
+                            disabled={branches.length < 2}
+                            className="shrink-0 whitespace-nowrap rounded-md border border-stone-300 px-2 py-1.5 text-[10px] font-medium text-graphite-600 hover:bg-stone-100 disabled:opacity-30"
+                          >
+                            На всех точках
+                          </button>
                           <button
                             onClick={() => removeSizeRow(colorIdx, sizeIdx)}
                             type="button"

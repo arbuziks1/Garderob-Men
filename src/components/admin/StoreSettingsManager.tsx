@@ -1,14 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Plus, RotateCcw, Trash2 } from 'lucide-react';
-import type { StoreSettings, WorkingHours } from '../../types';
-import { useSettings, useAdminPromoCodes } from '../../hooks/useStore';
+import { ChevronDown, ChevronUp, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import type { PickupBranch, StoreSettings, WorkingHours } from '../../types';
+import { useSettings, useAdminPromoCodes, useAdminBranches } from '../../hooks/useStore';
 import { api } from '../../services/api';
 import SafeImage from '../shared/SafeImage';
 import ImageField from './ImageField';
 
+function newBranchDraft(position: number): Omit<PickupBranch, 'id'> {
+  return {
+    name: `Новый магазин ${position + 1}`,
+    address: 'Укажите адрес',
+    workingHours: [{ days: 'Ежедневно', hours: '10:00–20:00' }],
+    phone: '+7 (___) ___-__-__',
+    twoGisUrl: null,
+    mapLat: null,
+    mapLng: null,
+    position,
+  };
+}
+
 export default function StoreSettingsManager() {
   const [settings, refreshSettings] = useSettings();
   const [promoCodes, refreshPromoCodes] = useAdminPromoCodes();
+  const [branches, refreshBranches] = useAdminBranches();
   const [form, setForm] = useState<StoreSettings>(settings);
   const [savedTick, setSavedTick] = useState(0);
   const [saveError, setSaveError] = useState('');
@@ -27,9 +41,59 @@ export default function StoreSettingsManager() {
     }
   };
 
-  const updateHours = (idx: number, patch: Partial<WorkingHours>) => {
-    const workingHours = form.workingHours.map((wh, i) => (i === idx ? { ...wh, ...patch } : wh));
-    save({ ...form, workingHours });
+  const saveBranch = async (id: string, patch: Partial<PickupBranch>) => {
+    try {
+      await api.updateBranch(id, patch);
+      refreshBranches();
+      setSaveError('');
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось сохранить филиал.');
+    }
+  };
+
+  const updateBranchHours = (branch: PickupBranch, idx: number, patch: Partial<WorkingHours>) => {
+    const workingHours = branch.workingHours.map((wh, i) => (i === idx ? { ...wh, ...patch } : wh));
+    saveBranch(branch.id, { workingHours });
+  };
+
+  const addBranchHoursRow = (branch: PickupBranch) => {
+    saveBranch(branch.id, { workingHours: [...branch.workingHours, { days: '', hours: '' }] });
+  };
+
+  const removeBranchHoursRow = (branch: PickupBranch, idx: number) => {
+    saveBranch(branch.id, { workingHours: branch.workingHours.filter((_, i) => i !== idx) });
+  };
+
+  const addBranch = async () => {
+    try {
+      await api.createBranch(newBranchDraft(branches.length));
+      refreshBranches();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось создать филиал.');
+    }
+  };
+
+  const deleteBranch = async (id: string) => {
+    if (!confirm('Удалить этот филиал? Его остатки на товарах будут удалены вместе с ним.')) return;
+    try {
+      await api.deleteBranch(id);
+      refreshBranches();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось удалить филиал.');
+    }
+  };
+
+  const moveBranch = async (idx: number, direction: -1 | 1) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= branches.length) return;
+    const ids = branches.map((b) => b.id);
+    [ids[idx], ids[targetIdx]] = [ids[targetIdx], ids[idx]];
+    try {
+      await api.reorderBranches(ids);
+      refreshBranches();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Не удалось изменить порядок филиалов.');
+    }
   };
 
   const addPromo = async () => {
@@ -127,9 +191,6 @@ export default function StoreSettingsManager() {
           Контакты и адрес
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Адрес">
-            <input value={form.address} onChange={(e) => save({ ...form, address: e.target.value })} className="input" />
-          </Field>
           <Field label="Телефон (отображается на сайте)">
             <input
               value={form.phoneDisplay}
@@ -158,9 +219,6 @@ export default function StoreSettingsManager() {
               onChange={(e) => save({ ...form, instagramUrl: e.target.value })}
               className="input"
             />
-          </Field>
-          <Field label="Ссылка на 2ГИС">
-            <input value={form.twoGisUrl} onChange={(e) => save({ ...form, twoGisUrl: e.target.value })} className="input" />
           </Field>
         </div>
 
@@ -195,55 +253,13 @@ export default function StoreSettingsManager() {
             указывать реальное юридическое название и БИН/ИИН до подачи заявки на приём платежей.
           </p>
         )}
-
-        <p className="mb-2 mt-4 text-xs font-medium text-graphite-500">Часы работы</p>
-        <div className="flex flex-col gap-2">
-          {form.workingHours.map((wh, idx) => (
-            <div key={idx} className="flex gap-2">
-              <input
-                value={wh.days}
-                onChange={(e) => updateHours(idx, { days: e.target.value })}
-                placeholder="Дни"
-                className="input"
-              />
-              <input
-                value={wh.hours}
-                onChange={(e) => updateHours(idx, { hours: e.target.value })}
-                placeholder="Часы"
-                className="input"
-              />
-            </div>
-          ))}
-        </div>
       </section>
 
       <section className="rounded-xl border border-stone-200 bg-white p-5">
         <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-wide text-graphite-800">
-          Карта и бонусная программа
+          Бонусная программа
         </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Широта">
-            <input
-              type="number"
-              value={form.mapLat ?? ''}
-              onChange={(e) => save({ ...form, mapLat: e.target.value === '' ? null : Number(e.target.value) })}
-              className="input"
-            />
-          </Field>
-          <Field label="Долгота">
-            <input
-              type="number"
-              value={form.mapLng ?? ''}
-              onChange={(e) => save({ ...form, mapLng: e.target.value === '' ? null : Number(e.target.value) })}
-              className="input"
-            />
-          </Field>
-        </div>
-        <p className="mt-2 text-xs text-graphite-500">
-          Найдите магазин на Яндекс.Картах или 2ГИС, кликните правой кнопкой по точке — координаты скопируются.
-        </p>
-
-        <div className="mt-5 flex flex-col gap-3 border-t border-stone-200 pt-5">
+        <div className="flex flex-col gap-3">
           <label className="flex items-center gap-2 text-sm text-graphite-700">
             <input
               type="checkbox"
@@ -263,6 +279,146 @@ export default function StoreSettingsManager() {
               />
             </Field>
           )}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-stone-200 bg-white p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-graphite-800">
+            Филиалы самовывоза
+          </h2>
+          <button onClick={addBranch} className="flex items-center gap-1 text-sm font-medium text-ember">
+            <Plus size={14} /> Добавить филиал
+          </button>
+        </div>
+        <div className="flex flex-col gap-4">
+          {branches.map((branch, idx) => (
+            <div key={branch.id} className="rounded-lg border border-stone-200 p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">
+                  Филиал {idx + 1}
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => moveBranch(idx, -1)}
+                    disabled={idx === 0}
+                    type="button"
+                    className="rounded-md p-1.5 text-graphite-500 hover:bg-stone-100 disabled:opacity-30"
+                    aria-label="Выше"
+                  >
+                    <ChevronUp size={15} />
+                  </button>
+                  <button
+                    onClick={() => moveBranch(idx, 1)}
+                    disabled={idx === branches.length - 1}
+                    type="button"
+                    className="rounded-md p-1.5 text-graphite-500 hover:bg-stone-100 disabled:opacity-30"
+                    aria-label="Ниже"
+                  >
+                    <ChevronDown size={15} />
+                  </button>
+                  <button
+                    onClick={() => deleteBranch(branch.id)}
+                    type="button"
+                    className="rounded-md p-1.5 text-ember hover:bg-stone-100"
+                    aria-label="Удалить филиал"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Название">
+                  <input
+                    defaultValue={branch.name}
+                    onBlur={(e) => saveBranch(branch.id, { name: e.target.value })}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Телефон">
+                  <input
+                    defaultValue={branch.phone}
+                    onBlur={(e) => saveBranch(branch.id, { phone: e.target.value })}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Адрес">
+                  <input
+                    defaultValue={branch.address}
+                    onBlur={(e) => saveBranch(branch.id, { address: e.target.value })}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Ссылка на 2ГИС">
+                  <input
+                    defaultValue={branch.twoGisUrl ?? ''}
+                    onBlur={(e) => saveBranch(branch.id, { twoGisUrl: e.target.value.trim() || null })}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Широта">
+                  <input
+                    type="number"
+                    defaultValue={branch.mapLat ?? ''}
+                    onBlur={(e) =>
+                      saveBranch(branch.id, { mapLat: e.target.value === '' ? null : Number(e.target.value) })
+                    }
+                    className="input"
+                  />
+                </Field>
+                <Field label="Долгота">
+                  <input
+                    type="number"
+                    defaultValue={branch.mapLng ?? ''}
+                    onBlur={(e) =>
+                      saveBranch(branch.id, { mapLng: e.target.value === '' ? null : Number(e.target.value) })
+                    }
+                    className="input"
+                  />
+                </Field>
+              </div>
+
+              <div className="mt-3">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <p className="text-xs font-medium text-graphite-500">Часы работы</p>
+                  <button
+                    onClick={() => addBranchHoursRow(branch)}
+                    type="button"
+                    className="flex items-center gap-1 text-xs font-medium text-ember"
+                  >
+                    <Plus size={12} /> Добавить строку
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {branch.workingHours.map((wh, whIdx) => (
+                    <div key={whIdx} className="flex gap-2">
+                      <input
+                        value={wh.days}
+                        onChange={(e) => updateBranchHours(branch, whIdx, { days: e.target.value })}
+                        placeholder="Дни"
+                        className="input"
+                      />
+                      <input
+                        value={wh.hours}
+                        onChange={(e) => updateBranchHours(branch, whIdx, { hours: e.target.value })}
+                        placeholder="Часы"
+                        className="input"
+                      />
+                      <button
+                        onClick={() => removeBranchHoursRow(branch, whIdx)}
+                        type="button"
+                        className="shrink-0 rounded-md p-1.5 text-ember hover:bg-stone-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+          {branches.length === 0 && <p className="text-sm text-graphite-500">Филиалов пока нет</p>}
         </div>
       </section>
 

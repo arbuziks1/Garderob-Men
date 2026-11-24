@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
 import { Clock, MapPin } from 'lucide-react';
-import type { StoreSettings } from '../../types';
+import type { PickupBranch, StoreSettings } from '../../types';
 import { EASE } from '../../utils/motion';
 import SafeImage from '../shared/SafeImage';
 
 interface HeroBannerProps {
   settings: StoreSettings;
+  branches: PickupBranch[];
   onShopClick: () => void;
 }
 
@@ -19,7 +20,9 @@ const item = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
-export default function HeroBanner({ settings, onShopClick }: HeroBannerProps) {
+export default function HeroBanner({ settings, branches, onShopClick }: HeroBannerProps) {
+  const firstBranch = branches[0];
+
   return (
     <section id="top" className="relative overflow-hidden bg-graphite-950 text-paper">
       <SafeImage
@@ -56,27 +59,34 @@ export default function HeroBanner({ settings, onShopClick }: HeroBannerProps) {
           </motion.button>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3, ease: EASE }}
-          className="flex flex-col gap-3 rounded-sm border border-white/10 bg-graphite-900/70 p-5 backdrop-blur-sm sm:min-w-[280px]"
-        >
-          <div className="flex items-start gap-3">
-            <MapPin size={18} className="mt-0.5 shrink-0 text-stone-400" />
-            <p className="text-sm text-stone-200">{settings.address}</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <Clock size={18} className="mt-0.5 shrink-0 text-stone-400" />
-            <div className="text-sm text-stone-200">
-              {settings.workingHours.map((wh, i) => (
-                <p key={i}>
-                  {wh.days}: {wh.hours}
-                </p>
-              ))}
+        {firstBranch && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: EASE }}
+            className="flex flex-col gap-3 rounded-sm border border-white/10 bg-graphite-900/70 p-5 backdrop-blur-sm sm:min-w-[280px]"
+          >
+            <div className="flex items-start gap-3">
+              <MapPin size={18} className="mt-0.5 shrink-0 text-stone-400" />
+              <p className="text-sm text-stone-200">{firstBranch.address}</p>
             </div>
-          </div>
-        </motion.div>
+            <div className="flex items-start gap-3">
+              <Clock size={18} className="mt-0.5 shrink-0 text-stone-400" />
+              <div className="text-sm text-stone-200">
+                {firstBranch.workingHours.map((wh, i) => (
+                  <p key={i}>
+                    {wh.days}: {wh.hours}
+                  </p>
+                ))}
+              </div>
+            </div>
+            {branches.length > 1 && (
+              <p className="text-xs text-stone-400">
+                +{branches.length - 1} {branches.length - 1 === 1 ? 'магазин' : 'магазина'}
+              </p>
+            )}
+          </motion.div>
+        )}
       </div>
     </section>
   );

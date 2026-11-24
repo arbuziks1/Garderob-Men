@@ -9,6 +9,7 @@ import { useWishlist } from '../../contexts/WishlistContext';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { useHorizontalScroll } from '../../hooks/useHorizontalScroll';
 import { useSearchHistory } from '../../hooks/useSearchHistory';
+import { useBranches } from '../../hooks/useStore';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 
 interface HeaderProps {
@@ -30,6 +31,8 @@ export default function Header({
   const { ids: wishlistIds, openDrawer: openWishlistDrawer } = useWishlist();
   const { openDrawer: openAccountDrawer } = useCustomerAuth();
   const { history, push: pushSearchHistory, clear: clearSearchHistory } = useSearchHistory();
+  const [branches] = useBranches();
+  const twoGisUrl = branches[0]?.twoGisUrl ?? null;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const categoryNavRef = useHorizontalScroll<HTMLElement>();
@@ -141,16 +144,18 @@ export default function Header({
           >
             <AtSign size={19} />
           </a>
-          <a
-            href={settings.twoGisUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden rounded-md p-2 text-stone-300 hover:bg-graphite-800 sm:block"
-            aria-label="2ГИС — как нас найти"
-            title="Карта 2ГИС"
-          >
-            <MapPin size={19} />
-          </a>
+          {twoGisUrl && (
+            <a
+              href={twoGisUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden rounded-md p-2 text-stone-300 hover:bg-graphite-800 sm:block"
+              aria-label="2ГИС — как нас найти"
+              title="Карта 2ГИС"
+            >
+              <MapPin size={19} />
+            </a>
+          )}
           <a
             href={supportLink}
             target="_blank"
@@ -260,9 +265,11 @@ export default function Header({
             <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
               <AtSign size={16} /> Instagram
             </a>
-            <a href={settings.twoGisUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
-              <MapPin size={16} /> 2ГИС
-            </a>
+            {twoGisUrl && (
+              <a href={twoGisUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
+                <MapPin size={16} /> 2ГИС
+              </a>
+            )}
             <a href={supportLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
               <MessageCircle size={16} /> Поддержка
             </a>

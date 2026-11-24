@@ -7,19 +7,16 @@ import { formatPrice } from '../../utils/format';
 import { EASE } from '../../utils/motion';
 import SafeImage from '../shared/SafeImage';
 import CheckoutForm from './CheckoutForm';
-import OrderSuccess from './OrderSuccess';
-import type { Order } from '../../types';
 
-type Step = 'cart' | 'checkout' | 'success';
+type Step = 'cart' | 'checkout';
 
 export default function CartDrawer() {
-  const { items, subtotal, itemCount, updateQuantity, removeItem, isDrawerOpen, closeDrawer, clearCart } = useCart();
+  const { items, subtotal, itemCount, updateQuantity, removeItem, isDrawerOpen, closeDrawer } = useCart();
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; percent: number } | null>(null);
   const [promoError, setPromoError] = useState('');
   const [checkingPromo, setCheckingPromo] = useState(false);
   const [step, setStep] = useState<Step>('cart');
-  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
   const discount = appliedPromo ? Math.round((subtotal * appliedPromo.percent) / 100) : 0;
   const total = subtotal - discount;
@@ -50,12 +47,6 @@ export default function CartDrawer() {
     setStep('cart');
   };
 
-  const handleOrderComplete = (order: Order) => {
-    setCompletedOrder(order);
-    setStep('success');
-    clearCart();
-  };
-
   return (
     <AnimatePresence>
       {isDrawerOpen && (
@@ -79,16 +70,11 @@ export default function CartDrawer() {
           <h2 className="font-display text-lg font-semibold text-graphite-950">
             {step === 'cart' && `Корзина (${itemCount})`}
             {step === 'checkout' && 'Оформление заказа'}
-            {step === 'success' && 'Заказ оформлен'}
           </h2>
           <button onClick={handleClose} aria-label="Закрыть">
             <X size={20} />
           </button>
         </div>
-
-        {step === 'success' && completedOrder && (
-          <OrderSuccess order={completedOrder} onClose={handleClose} />
-        )}
 
         {step === 'checkout' && (
           <CheckoutForm
@@ -98,7 +84,6 @@ export default function CartDrawer() {
             total={total}
             promoCode={appliedPromo?.code}
             onBack={() => setStep('cart')}
-            onComplete={handleOrderComplete}
           />
         )}
 

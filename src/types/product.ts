@@ -26,12 +26,19 @@ export const CATEGORIES: Category[] = [
   'Обувь и аксессуары',
 ];
 
+export interface BranchStock {
+  branchId: string;
+  branchName: string;
+  stock: number;
+}
+
 export interface SizeStock {
   id: string;
   sizeRu?: string;
   sizeEu?: string;
   sizeInt?: string;
   stock: number;
+  branchStocks: BranchStock[];
 }
 
 /** Замеры в см, keyed by the combined size label (see combinedSizeLabel in

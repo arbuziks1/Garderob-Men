@@ -3,7 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import type { Category, Product } from '../types';
 import { isInStock, priceRange } from '../types';
 import { sortSizeLabels } from '../data/sizeGrids';
-import { useProducts, useSettings } from '../hooks/useStore';
+import { useBranches, useProducts, useSettings } from '../hooks/useStore';
 import Header from '../components/storefront/Header';
 import HeroBanner from '../components/storefront/HeroBanner';
 import FiltersBar from '../components/storefront/FiltersBar';
@@ -22,6 +22,7 @@ import AccountDrawer from '../components/storefront/AccountDrawer';
 export default function StorefrontPage() {
   const [products] = useProducts();
   const [settings] = useSettings();
+  const [branches] = useBranches();
   const [activeCategory, setActiveCategory] = useState<Category | 'Все' | null>('Все');
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -97,7 +98,7 @@ export default function StorefrontPage() {
         />
       </div>
 
-      <HeroBanner settings={settings} onShopClick={scrollToCatalog} />
+      <HeroBanner settings={settings} branches={branches} onShopClick={scrollToCatalog} />
 
       <main ref={catalogRef} className="mx-auto w-full max-w-7xl flex-1 scroll-mt-20 px-4 py-8 sm:px-6">
         <FiltersBar

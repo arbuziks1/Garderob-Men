@@ -1,4 +1,13 @@
-import type { DeliveryAddress, Order, OrderPublic, OrderStatus, Product, PromoCode, StoreSettings } from '../types';
+import type {
+  DeliveryAddress,
+  Order,
+  OrderPublic,
+  OrderStatus,
+  PickupBranch,
+  Product,
+  PromoCode,
+  StoreSettings,
+} from '../types';
 
 const ADMIN_TOKEN_KEY = 'gm_admin_token';
 const CUSTOMER_TOKEN_KEY = 'gm_customer_token';
@@ -118,7 +127,6 @@ export interface CreateOrderInput {
   customerName: string;
   phone: string;
   delivery: string;
-  payment: string;
   items: { productId: string; colorId: string; sizeStockId: string; sizeLabel: string; quantity: number }[];
   subtotal: number;
   discount: number;
@@ -127,6 +135,7 @@ export interface CreateOrderInput {
   comment?: string;
   consentGiven: boolean;
   deliveryAddress?: DeliveryAddress;
+  pickupBranchId?: string;
 }
 
 export const api = {
@@ -135,6 +144,9 @@ export const api = {
   },
   getSettings(): Promise<StoreSettings> {
     return request('/api/settings');
+  },
+  getBranches(): Promise<PickupBranch[]> {
+    return request('/api/branches');
   },
   checkPromoCode(code: string): Promise<{ valid: boolean; discountPercent?: number }> {
     return request(`/api/promo-codes/${encodeURIComponent(code)}`);
@@ -220,6 +232,23 @@ export const api = {
   // ---- Admin: settings ----
   updateSettings(data: StoreSettings): Promise<StoreSettings> {
     return request('/api/admin/settings', { method: 'PUT', body: json(data) }, 'admin');
+  },
+
+  // ---- Admin: branches ----
+  getAdminBranches(): Promise<PickupBranch[]> {
+    return request('/api/admin/branches', {}, 'admin');
+  },
+  createBranch(data: unknown): Promise<PickupBranch> {
+    return request('/api/admin/branches', { method: 'POST', body: json(data) }, 'admin');
+  },
+  updateBranch(id: string, data: unknown): Promise<PickupBranch> {
+    return request(`/api/admin/branches/${id}`, { method: 'PUT', body: json(data) }, 'admin');
+  },
+  reorderBranches(ids: string[]): Promise<void> {
+    return request('/api/admin/branches/reorder', { method: 'PATCH', body: json({ ids }) }, 'admin');
+  },
+  deleteBranch(id: string): Promise<void> {
+    return request(`/api/admin/branches/${id}`, { method: 'DELETE' }, 'admin');
   },
 
   // ---- Admin: promo codes ----

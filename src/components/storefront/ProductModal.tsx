@@ -38,7 +38,7 @@ function labelFor(row: SizeStock, grid: Grid): string {
  *  in the order the rows were entered (stable, no re-sort needed — the admin table
  *  already orders them left to right the way it was filled). */
 function measurementColumns(product: Product): string[] {
-  if (!product.measurements) return [];
+  if (!product.measurements?.rows?.length) return [];
   const set = new Set<string>();
   for (const row of product.measurements.rows) {
     for (const label of Object.keys(product.measurements.values[row] ?? {})) set.add(label);
@@ -65,11 +65,30 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   const inStockSizes = color.sizes.filter((s) => s.stock > 0);
   const allOutOfStock = inStockSizes.length === 0;
 
+  // If every in-stock size of this color only has stock at one branch, surface that fact
+  // once up front — useful without needing to pick a size first.
+  const singleBranchOnlyName = useMemo(() => {
+    const stockedBranchIds = new Set<string>();
+    const nameById = new Map<string, string>();
+    for (const s of color.sizes) {
+      for (const bs of s.branchStocks) {
+        if (bs.stock > 0) {
+          stockedBranchIds.add(bs.branchId);
+          nameById.set(bs.branchId, bs.branchName);
+        }
+      }
+    }
+    if (stockedBranchIds.size === 1) {
+      return nameById.get([...stockedBranchIds][0]) ?? null;
+    }
+    return null;
+  }, [color]);
+
   const selectedRow = color.sizes.find((s) => s.id === selectedSizeId) ?? null;
   const canAdd = selectedRow !== null && selectedRow.stock > 0;
 
   const selectedSizeMeasurementLine = useMemo(() => {
-    if (!selectedRow || !product.measurements) return null;
+    if (!selectedRow || !product.measurements?.rows?.length) return null;
     const sizeLabel = combinedSizeLabel(selectedRow);
     const parts = product.measurements.rows
       .map((rowLabel) => {
@@ -314,6 +333,25 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                 {selectedRow && (
                   <p className="mt-1 text-xs text-graphite-500">В наличии: {selectedRow.stock} шт.</p>
                 )}
+                {selectedRow && selectedRow.branchStocks.length > 0 && (
+                  <div className="mt-2">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-graphite-500">
+                      Наличие в магазинах
+                    </p>
+                    <ul className="flex flex-col gap-0.5 text-xs text-graphite-600">
+                      {selectedRow.branchStocks.map((bs) => (
+                        <li key={bs.branchId}>
+                          {bs.branchName} —{' '}
+                          {bs.stock > 0 ? (
+                            <span className="text-graphite-800">В наличии ({bs.stock} шт.)</span>
+                          ) : (
+                            <span className="text-stone-400">Нет в наличии</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
               {product.sizeFit && (
@@ -333,6 +371,11 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
               >
                 {added ? 'Добавлено в корзину ✓' : 'Добавить в корзину'}
               </button>
+              {singleBranchOnlyName && (
+                <p className="text-center text-xs text-graphite-500">
+                  Эта модель есть только в «{singleBranchOnlyName}»
+                </p>
+              )}
             </>
           )}
         </div>

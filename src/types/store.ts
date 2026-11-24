@@ -5,23 +5,30 @@ export interface WorkingHours {
 
 export interface StoreSettings {
   storeName: string;
-  address: string;
-  workingHours: WorkingHours[];
   whatsappPhone: string;
   phoneDisplay: string;
   kaspiPayLink: string;
   legalName: string;
   businessId: string;
   instagramUrl: string;
-  twoGisUrl: string;
   heroTitle: string;
   heroSubtitle: string;
   heroImage: string;
   heroCtaLabel: string;
-  mapLat: number | null;
-  mapLng: number | null;
   bonusEnabled: boolean;
   bonusPercent: number;
+}
+
+export interface PickupBranch {
+  id: string;
+  name: string;
+  address: string;
+  workingHours: WorkingHours[];
+  phone: string;
+  twoGisUrl: string | null;
+  mapLat: number | null;
+  mapLng: number | null;
+  position: number;
 }
 
 export interface PromoCode {

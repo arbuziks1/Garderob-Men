@@ -1,7 +1,9 @@
-import { useSettings } from '../../hooks/useStore';
+import { useBranches, useSettings } from '../../hooks/useStore';
 
 export default function OfferContent() {
   const [settings] = useSettings();
+  const [branches] = useBranches();
+  const addressSummary = branches.map((b) => b.address).join('; ') || '[адрес магазина не указан]';
   const seller = settings.legalName.trim() || '[юридическое название не указано продавцом]';
   const bin = settings.businessId.trim() || '[БИН/ИИН не указан продавцом]';
 
@@ -57,7 +59,7 @@ export default function OfferContent() {
         4. Доставка
       </h3>
       <p className="mb-3">
-        Способ получения Товара (самовывоз из магазина по адресу {settings.address} либо доставка по
+        Способ получения Товара (самовывоз из магазина по адресу {addressSummary} либо доставка по
         Усть-Каменогорску) выбирается Покупателем при оформлении Заказа. Сроки и стоимость доставки
         согласовываются индивидуально при подтверждении Заказа.
       </p>
@@ -99,7 +101,7 @@ export default function OfferContent() {
         8. Контакты Продавца
       </h3>
       <p>
-        {seller}, БИН/ИИН {bin}. Адрес: {settings.address}. Телефон: {settings.phoneDisplay}.
+        {seller}, БИН/ИИН {bin}. Адрес: {addressSummary}. Телефон: {settings.phoneDisplay}.
       </p>
     </>
   );

@@ -13,8 +13,6 @@ export default function OrderStatusPage() {
   const [settings] = useSettings();
   const [order, setOrder] = useState<OrderPublic | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [payError, setPayError] = useState('');
-  const [paying, setPaying] = useState(false);
 
   const refetch = () => {
     if (!id) return;
@@ -25,20 +23,6 @@ export default function OrderStatusPage() {
   };
 
   useEffect(refetch, [id]);
-
-  const handleMockPay = async () => {
-    if (!id) return;
-    setPaying(true);
-    setPayError('');
-    try {
-      await api.mockPay(id);
-      refetch();
-    } catch (err) {
-      setPayError(err instanceof Error ? err.message : 'Не удалось выполнить тестовую оплату.');
-    } finally {
-      setPaying(false);
-    }
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
@@ -57,14 +41,21 @@ export default function OrderStatusPage() {
 
         {order && (
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-graphite-500">Заказ №{order.id}</p>
-                <p className="text-sm text-graphite-500">{formatDate(order.createdAt)}</p>
+            <div className="rounded-xl border border-stone-200 bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-graphite-500">Заказ №{order.id}</p>
+                  <p className="text-sm text-graphite-500">{formatDate(order.createdAt)}</p>
+                </div>
+                <span className="rounded-full bg-stone-100 px-3 py-1.5 text-sm font-semibold text-graphite-950">
+                  {ORDER_STATUS_LABEL[order.status]}
+                </span>
               </div>
-              <span className="rounded-full bg-stone-100 px-3 py-1.5 text-sm font-semibold text-graphite-950">
-                {ORDER_STATUS_LABEL[order.status]}
-              </span>
+              {order.pickupBranchName && (
+                <p className="mt-3 text-sm text-graphite-700">
+                  Самовывоз: <span className="font-medium text-graphite-950">{order.pickupBranchName}</span>
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white">
@@ -82,19 +73,19 @@ export default function OrderStatusPage() {
               </div>
             </div>
 
-            {order.status === 'PENDING_PAYMENT' && (
-              <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-4">
-                <p className="mb-2 text-xs text-amber-700">
-                  Тестовый режим оплаты (до подключения реального Kaspi Pay).
-                </p>
-                <button
-                  onClick={handleMockPay}
-                  disabled={paying}
-                  className="rounded-sm bg-graphite-950 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                >
-                  {paying ? 'Оплачиваем…' : 'Оплатить (тест)'}
-                </button>
-                {payError && <p className="mt-2 text-xs text-ember">{payError}</p>}
+            {order.status === 'PENDING_PAYMENT' && order.payment === 'Банковская карта (онлайн)' && (
+              <Link
+                to={`/payment/${order.id}`}
+                className="flex items-center justify-center rounded-sm bg-ember py-4 font-display text-sm uppercase tracking-[0.15em] text-paper shadow-sm transition-colors hover:bg-ember-light"
+              >
+                Перейти к оплате
+              </Link>
+            )}
+
+            {order.status === 'PENDING_PAYMENT' && order.payment === 'Оплата при получении' && (
+              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm text-graphite-700">
+                Оплата при получении{order.pickupBranchName ? ` в магазине «${order.pickupBranchName}»` : ' в магазине'}
+                .
               </div>
             )}
 
@@ -102,9 +93,9 @@ export default function OrderStatusPage() {
               href={buildWhatsAppLink(settings.whatsappPhone, `Здравствуйте! Вопрос по заказу №${order.id}.`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-sm border border-graphite-950 px-4 py-3 text-sm font-medium text-graphite-950 hover:bg-stone-50"
+              className="inline-flex items-center justify-center gap-2 rounded-sm border border-stone-300 px-4 py-2.5 text-sm font-medium text-graphite-700 hover:bg-stone-50"
             >
-              <MessageCircle size={16} />
+              <MessageCircle size={15} />
               Написать менеджеру в WhatsApp по этому заказу
             </a>
           </div>

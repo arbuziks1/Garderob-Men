@@ -1,7 +1,9 @@
-import { useSettings } from '../../hooks/useStore';
+import { useBranches, useSettings } from '../../hooks/useStore';
 
 export default function PrivacyContent() {
   const [settings] = useSettings();
+  const [branches] = useBranches();
+  const addressSummary = branches.map((b) => b.address).join('; ');
 
   return (
     <>
@@ -25,8 +27,8 @@ export default function PrivacyContent() {
         этого достаточно написать по контактам ниже.
       </p>
       <p>
-        <strong>Контакты по вопросам персональных данных:</strong> {settings.phoneDisplay}, {settings.address}
-        .
+        <strong>Контакты по вопросам персональных данных:</strong> {settings.phoneDisplay}
+        {addressSummary ? `, ${addressSummary}` : ''}.
       </p>
     </>
   );

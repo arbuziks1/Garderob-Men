@@ -12,7 +12,7 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 
 export type DeliveryMethod = 'Самовывоз из магазина' | 'Доставка по Усть-Каменогорску';
 
-export type PaymentMethod = 'Kaspi QR' | 'Перевод' | 'Наличными при получении';
+export type PaymentMethod = 'Оплата при получении' | 'Банковская карта (онлайн)';
 
 export interface OrderItem {
   productId?: string;
@@ -53,6 +53,7 @@ export interface Order {
   fiscalReceiptNumber?: string;
   fiscalReceiptUrl?: string;
   deliveryAddress?: DeliveryAddress;
+  pickupBranchName?: string;
 }
 
 /** Shape returned by the public /api/orders/:id lookup — deliberately omits PII. */
@@ -60,6 +61,8 @@ export interface OrderPublic {
   id: string;
   createdAt: string;
   status: OrderStatus;
+  payment: PaymentMethod;
+  pickupBranchName?: string;
   total: number;
   items: OrderItem[];
 }
