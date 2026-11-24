@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { prisma } from './prisma';
 import { LABEL_TO_CATEGORY, LABEL_TO_FIT } from './labels';
 import { generateSku } from './sku';
-import { DEFAULT_PROMO_CODES, DEFAULT_STORE_SETTINGS, SEED_PRODUCTS } from './seedData';
+import { DEFAULT_BRANCHES, DEFAULT_PROMO_CODES, DEFAULT_STORE_SETTINGS, SEED_PRODUCTS } from './seedData';
 
 /** Creates the initial admin user from ADMIN_EMAIL/ADMIN_PASSWORD if one doesn't exist yet.
  *  Safe to call repeatedly — never overwrites an existing admin's password. */
@@ -43,6 +43,15 @@ async function resetCatalogAndSettings() {
     });
   }
 
+  // Branches aren't referenced by anything that survives a demo reset (deleting one
+  // only nulls out Order.pickupBranchId via onDelete: SetNull, same documented
+  // trade-off as the product reset below), so delete-all-and-recreate is simplest
+  // and stays idempotent/re-runnable like the rest of this function.
+  await prisma.pickupBranch.deleteMany({});
+  const branches = await Promise.all(
+    DEFAULT_BRANCHES.map((branch, position) => prisma.pickupBranch.create({ data: { ...branch, position } }))
+  );
+
   await prisma.product.deleteMany({});
   // Generating the sku requires the CategorySkuCounter upsert to happen inside the same
   // transaction as the product create (see generateSku's docs) — each product gets its
@@ -82,8 +91,13 @@ async function resetCatalogAndSettings() {
                   sizeRu: s.sizeRu ?? null,
                   sizeEu: s.sizeEu ?? null,
                   sizeInt: s.sizeInt ?? null,
-                  stock: s.stock,
                   position: sizePosition,
+                  branchStocks: {
+                    create: s.branchStock.map((stock, branchIdx) => ({
+                      branchId: branches[branchIdx].id,
+                      stock,
+                    })),
+                  },
                 })),
               },
             })),

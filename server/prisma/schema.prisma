@@ -27,9 +27,8 @@ enum DeliveryMethod {
 }
 
 enum PaymentMethod {
-  KASPI_QR
-  TRANSFER
-  CASH
+  CASH_ON_PICKUP
+  CARD_ONLINE
 }
 
 enum OrderStatus {
@@ -123,12 +122,48 @@ model ProductSizeStock {
   sizeRu   String?
   sizeEu   String?
   sizeInt  String?
-  stock    Int    @default(0)
   position Int    @default(0)
+
+  // Stock is tracked per pickup branch, not as one flat number — see BranchStock.
+  branchStocks BranchStock[]
+  orderItems   OrderItem[]
+
+  @@index([colorId])
+}
+
+// One of the store's two (or more) physical pickup shops. Replaces the single flat
+// address/workingHours that used to live on StoreSettings — the store now has
+// multiple physical locations, each with its own stock pool.
+model PickupBranch {
+  id           String  @id @default(cuid())
+  name         String
+  address      String
+  workingHours Json    // same WorkingHours[] shape StoreSettings.workingHours used — [{days, hours}]
+  phone        String
+  twoGisUrl    String?
+  mapLat       Float?
+  mapLng       Float?
+  position     Int     @default(0)
+
+  branchStocks BranchStock[]
+  orders       Order[]
+}
+
+// Replaces the old flat ProductSizeStock.stock — the same size/color row can have a
+// different stock number at each branch, and an order line decrements exactly one
+// branch's row (see orderLifecycle.ts for the race-safe decrement pattern).
+model BranchStock {
+  id          String           @id @default(cuid())
+  sizeStockId String
+  sizeStock   ProductSizeStock @relation(fields: [sizeStockId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      PickupBranch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  stock       Int              @default(0)
 
   orderItems OrderItem[]
 
-  @@index([colorId])
+  @@unique([sizeStockId, branchId])
+  @@index([branchId])
 }
 
 model Order {
@@ -149,6 +184,13 @@ model Order {
 
   // Structured delivery address; present only for DELIVERY orders, null for self-pickup.
   deliveryAddress Json?
+
+  // Which branch the customer picked for SELF_PICKUP orders; null for DELIVERY orders.
+  // Snapshot kept alongside so the order's history stays readable even if the branch
+  // is later renamed or deleted (same pattern as skuSnapshot/titleSnapshot below).
+  pickupBranchId           String?
+  pickupBranch             PickupBranch? @relation(fields: [pickupBranchId], references: [id], onDelete: SetNull)
+  pickupBranchNameSnapshot String?
 
   paymentTransactionId String?
   fiscalReceiptNumber  String?
@@ -174,6 +216,13 @@ model OrderItem {
   sizeStockId String?
   sizeStock   ProductSizeStock? @relation(fields: [sizeStockId], references: [id], onDelete: SetNull)
 
+  // Which specific branch's stock pool this line item actually decremented — set for
+  // every order regardless of delivery method (all stock ultimately comes from one of
+  // the physical branches). Nullable + SetNull so deleting a branch later doesn't
+  // delete historical order rows.
+  branchStockId String?
+  branchStock   BranchStock? @relation(fields: [branchStockId], references: [id], onDelete: SetNull)
+
   skuSnapshot       String
   titleSnapshot     String
   colorNameSnapshot String
@@ -188,23 +237,16 @@ model OrderItem {
 model StoreSettings {
   id            Int    @id @default(1)
   storeName     String
-  address       String
-  workingHours  Json
   whatsappPhone String
   phoneDisplay  String
   kaspiPayLink  String
   legalName     String
   businessId    String
   instagramUrl  String
-  twoGisUrl     String
   heroTitle     String
   heroSubtitle  String
   heroImage     String
   heroCtaLabel  String
-
-  // Coordinates for an embeddable store-location map widget — nullable, owner may leave unset.
-  mapLat Float?
-  mapLng Float?
 
   // Cashback program toggle + percent, shown as a customer's bonus balance in /api/customer/orders.
   bonusEnabled Boolean @default(false)

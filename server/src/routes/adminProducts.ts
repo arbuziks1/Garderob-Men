@@ -50,7 +50,7 @@ interface SizeInput {
   sizeRu?: string;
   sizeEu?: string;
   sizeInt?: string;
-  stock: number;
+  branchStocks: { branchId: string; stock: number }[];
 }
 
 interface ColorInput {
@@ -93,14 +93,26 @@ function colorsCreateData(colors: ColorInput[]) {
         sizeRu: s.sizeRu?.trim() || null,
         sizeEu: s.sizeEu?.trim() || null,
         sizeInt: s.sizeInt?.trim() || null,
-        stock: s.stock,
         position: sizePosition,
+        branchStocks: {
+          create: s.branchStocks.map((bs) => ({ branchId: bs.branchId, stock: bs.stock })),
+        },
       })),
     },
   }));
 }
 
-const include = { colors: { include: { images: true, sizes: { orderBy: { position: 'asc' } } } } } as const;
+const include = {
+  colors: {
+    include: {
+      images: true,
+      sizes: {
+        include: { branchStocks: { include: { branch: true } } },
+        orderBy: { position: 'asc' },
+      },
+    },
+  },
+} as const;
 
 /** Treats a blank optional text field as "not set" (null) rather than storing an empty
  *  string — used on both create and update so clearing a field in the admin form actually

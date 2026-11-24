@@ -10,7 +10,17 @@ export const publicRouter = Router();
 
 publicRouter.get('/products', async (_req, res) => {
   const products = await prisma.product.findMany({
-    include: { colors: { include: { images: true, sizes: { orderBy: { position: 'asc' } } } } },
+    include: {
+      colors: {
+        include: {
+          images: true,
+          sizes: {
+            include: { branchStocks: { include: { branch: true } } },
+            orderBy: { position: 'asc' },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: 'asc' },
   });
   res.json(products.map(serializeProduct));
@@ -40,7 +50,6 @@ publicRouter.post('/orders', async (req, res) => {
       customerName?: string;
       phone?: string;
       delivery?: string;
-      payment?: string;
       items?: { productId: string; colorId: string; sizeStockId: string; sizeLabel: string; quantity: number }[];
       subtotal?: number;
       discount?: number;
@@ -49,9 +58,10 @@ publicRouter.post('/orders', async (req, res) => {
       comment?: string;
       consentGiven?: boolean;
       deliveryAddress?: { city: string; street: string; house: string; apartment?: string; entrance?: string; comment?: string };
+      pickupBranchId?: string;
     };
 
-    if (!body.customerName || !body.phone || !body.delivery || !body.payment) {
+    if (!body.customerName || !body.phone || !body.delivery) {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
@@ -68,7 +78,6 @@ publicRouter.post('/orders', async (req, res) => {
       customerName: body.customerName,
       phone: body.phone,
       delivery: body.delivery,
-      payment: body.payment,
       items: body.items,
       subtotal: body.subtotal ?? 0,
       discount: body.discount ?? 0,
@@ -77,6 +86,7 @@ publicRouter.post('/orders', async (req, res) => {
       comment: body.comment,
       consentGiven: body.consentGiven,
       deliveryAddress: body.deliveryAddress,
+      pickupBranchId: body.pickupBranchId,
     });
 
     res.status(201).json(serializeOrderFull(order));

@@ -37,7 +37,9 @@ interface SeedSizeStock {
   sizeRu?: string;
   sizeEu?: string;
   sizeInt?: string;
-  stock: number;
+  // Stock per demo branch, same length/order as DEFAULT_BRANCHES (index 0 = branch 1,
+  // index 1 = branch 2).
+  branchStock: number[];
 }
 
 interface SeedColor {
@@ -80,29 +82,31 @@ const RU_TO_INT: Record<string, string> = {
 };
 
 /** A size row per RU number given, with EU mirrored and INT derived from the mapping —
- *  demonstrates the "all three grids filled, pick any one on the switcher" case. */
-function ruGrid(entries: [ru: string, stock: number][]): SeedSizeStock[] {
-  return entries.map(([ru, stockQty]) => ({ sizeRu: ru, sizeEu: ru, sizeInt: RU_TO_INT[ru], stock: stockQty }));
+ *  demonstrates the "all three grids filled, pick any one on the switcher" case.
+ *  Each entry is [ru, branch1Stock, branch2Stock] — stock split across the two demo
+ *  branches rather than one flat number (see DEFAULT_BRANCHES). */
+function ruGrid(entries: [ru: string, b1: number, b2: number][]): SeedSizeStock[] {
+  return entries.map(([ru, b1, b2]) => ({ sizeRu: ru, sizeEu: ru, sizeInt: RU_TO_INT[ru], branchStock: [b1, b2] }));
 }
 
 /** Jeans waist sizes — INT-only ("W30"), no RU/EU equivalent on purpose: demonstrates
  *  the "only one grid filled in" case the size switcher has to handle gracefully. */
-function waistGrid(entries: [waist: number, stock: number][]): SeedSizeStock[] {
-  return entries.map(([w, stockQty]) => ({ sizeInt: `W${w}`, stock: stockQty }));
+function waistGrid(entries: [waist: number, b1: number, b2: number][]): SeedSizeStock[] {
+  return entries.map(([w, b1, b2]) => ({ sizeInt: `W${w}`, branchStock: [b1, b2] }));
 }
 
 /** International letter sizes only (no RU/EU) — the other "single grid filled" case. */
-function intGrid(entries: [size: string, stock: number][]): SeedSizeStock[] {
-  return entries.map(([size, stockQty]) => ({ sizeInt: size, stock: stockQty }));
+function intGrid(entries: [size: string, b1: number, b2: number][]): SeedSizeStock[] {
+  return entries.map(([size, b1, b2]) => ({ sizeInt: size, branchStock: [b1, b2] }));
 }
 
 /** EU shoe sizing is the only grid that applies to footwear. */
-function shoeGrid(entries: [eu: number, stock: number][]): SeedSizeStock[] {
-  return entries.map(([eu, stockQty]) => ({ sizeEu: String(eu), stock: stockQty }));
+function shoeGrid(entries: [eu: number, b1: number, b2: number][]): SeedSizeStock[] {
+  return entries.map(([eu, b1, b2]) => ({ sizeEu: String(eu), branchStock: [b1, b2] }));
 }
 
-function oneSize(stockQty: number): SeedSizeStock[] {
-  return [{ sizeInt: 'One Size', stock: stockQty }];
+function oneSize(b1: number, b2: number): SeedSizeStock[] {
+  return [{ sizeInt: 'One Size', branchStock: [b1, b2] }];
 }
 
 export const SEED_PRODUCTS: SeedProduct[] = [
@@ -122,11 +126,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#16161a',
         images: [IMG.leatherJacketProduct, IMG.leatherJacketModel],
         sizes: ruGrid([
-          ['46', 2],
-          ['48', 6],
-          ['50', 8],
-          ['52', 5],
-          ['54', 0],
+          ['46', 1, 1],
+          ['48', 2, 4],
+          ['50', 3, 5],
+          ['52', 2, 3],
+          ['54', 0, 0],
         ]),
       },
     ],
@@ -170,12 +174,12 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#3e5572',
         images: [IMG.denimJacketProduct, IMG.denimJacketModel],
         sizes: ruGrid([
-          ['46', 4],
-          ['48', 9],
-          ['50', 10],
-          ['52', 7],
-          ['54', 3],
-          ['56', 0],
+          ['46', 2, 2],
+          ['48', 4, 5],
+          ['50', 5, 5],
+          ['52', 3, 4],
+          ['54', 1, 2],
+          ['56', 0, 0],
         ]),
       },
     ],
@@ -209,12 +213,14 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         name: 'Терракотовый',
         hex: '#9c5a35',
         images: [IMG.bomberProduct],
+        // Deliberately branch-1-only across the whole color — exercises the
+        // "only available at one branch" UI case.
         sizes: ruGrid([
-          ['46', 0],
-          ['48', 3],
-          ['50', 6],
-          ['52', 4],
-          ['54', 2],
+          ['46', 0, 0],
+          ['48', 3, 0],
+          ['50', 6, 0],
+          ['52', 4, 0],
+          ['54', 2, 0],
         ]),
       },
       {
@@ -222,11 +228,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#141414',
         images: [IMG.quiltedJacketModel],
         sizes: ruGrid([
-          ['46', 3],
-          ['48', 7],
-          ['50', 9],
-          ['52', 6],
-          ['54', 0],
+          ['46', 1, 2],
+          ['48', 3, 4],
+          ['50', 4, 5],
+          ['52', 3, 3],
+          ['54', 0, 0],
         ]),
       },
     ],
@@ -260,11 +266,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#8a8a8f',
         images: [IMG.hoodieGreyModel],
         sizes: intGrid([
-          ['S', 5],
-          ['M', 10],
-          ['L', 12],
-          ['XL', 8],
-          ['2XL', 4],
+          ['S', 2, 3],
+          ['M', 5, 5],
+          ['L', 7, 5],
+          ['XL', 3, 5],
+          ['2XL', 1, 3],
         ]),
       },
     ],
@@ -307,11 +313,12 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#f2f1ec',
         images: [IMG.sweatshirtWhiteProduct],
         sizes: intGrid([
-          ['S', 6],
-          ['M', 10],
-          ['L', 10],
-          ['XL', 6],
-          ['2XL', 2],
+          ['S', 3, 3],
+          ['M', 6, 4],
+          ['L', 4, 6],
+          ['XL', 2, 4],
+          // Deliberately branch-2-only — only branch 2 has this size at all.
+          ['2XL', 0, 2],
         ]),
       },
     ],
@@ -345,23 +352,25 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#161616',
         images: [IMG.graphicTeeModel],
         sizes: intGrid([
-          ['S', 4],
-          ['M', 8],
-          ['L', 9],
-          ['XL', 5],
-          ['2XL', 2],
+          ['S', 2, 2],
+          ['M', 3, 5],
+          ['L', 5, 4],
+          ['XL', 2, 3],
+          ['2XL', 1, 1],
         ]),
       },
       {
         name: 'Розовый пудровый',
         hex: '#d99a86',
         images: [IMG.pinkSweatshirtModel],
+        // Deliberately branch-2-only across the whole color — exercises the
+        // "only available at one branch" UI case for a second product.
         sizes: intGrid([
-          ['S', 2],
-          ['M', 4],
-          ['L', 4],
-          ['XL', 2],
-          ['2XL', 0],
+          ['S', 0, 2],
+          ['M', 0, 4],
+          ['L', 0, 4],
+          ['XL', 0, 2],
+          ['2XL', 0, 0],
         ]),
       },
     ],
@@ -393,11 +402,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#35526b',
         images: [IMG.jeansRackProduct],
         sizes: waistGrid([
-          [28, 3],
-          [30, 8],
-          [32, 9],
-          [34, 5],
-          [36, 0],
+          [28, 1, 2],
+          [30, 4, 4],
+          [32, 5, 4],
+          [34, 2, 3],
+          [36, 0, 0],
         ]),
       },
     ],
@@ -437,11 +446,12 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#9c8558',
         images: [IMG.chinosModel],
         sizes: ruGrid([
-          ['46', 5],
-          ['48', 9],
-          ['50', 10],
-          ['52', 6],
-          ['54', 3],
+          ['46', 2, 3],
+          ['48', 4, 5],
+          ['50', 6, 4],
+          ['52', 3, 3],
+          // Deliberately branch-1-only for this one row.
+          ['54', 3, 0],
         ]),
       },
     ],
@@ -472,11 +482,12 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#24344a',
         images: [IMG.outfitFlatlay],
         sizes: waistGrid([
-          [30, 2],
-          [32, 6],
-          [34, 7],
-          [36, 4],
-          [38, 1],
+          // Deliberately branch-2-only for this one row.
+          [30, 0, 2],
+          [32, 3, 3],
+          [34, 4, 3],
+          [36, 2, 2],
+          [38, 1, 0],
         ]),
       },
     ],
@@ -509,11 +520,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#3b4a63',
         images: [IMG.checkSuitModel],
         sizes: ruGrid([
-          ['46', 0],
-          ['48', 2],
-          ['50', 3],
-          ['52', 2],
-          ['54', 1],
+          ['46', 0, 0],
+          ['48', 1, 1],
+          ['50', 2, 1],
+          ['52', 1, 1],
+          ['54', 0, 1],
         ]),
       },
     ],
@@ -548,11 +559,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#1f2a44',
         images: [IMG.navySuitModel],
         sizes: ruGrid([
-          ['46', 1],
-          ['48', 4],
-          ['50', 5],
-          ['52', 3],
-          ['54', 1],
+          ['46', 1, 0],
+          ['48', 2, 2],
+          ['50', 3, 2],
+          ['52', 1, 2],
+          ['54', 0, 1],
         ]),
       },
     ],
@@ -587,11 +598,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#6b6f76',
         images: [IMG.shirtsFolded],
         sizes: ruGrid([
-          ['46', 5],
-          ['48', 10],
-          ['50', 11],
-          ['52', 7],
-          ['54', 3],
+          ['46', 2, 3],
+          ['48', 5, 5],
+          ['50', 6, 5],
+          ['52', 3, 4],
+          ['54', 1, 2],
         ]),
       },
       {
@@ -599,11 +610,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#5b2430',
         images: [IMG.shirtsFolded],
         sizes: ruGrid([
-          ['46', 3],
-          ['48', 7],
-          ['50', 8],
-          ['52', 4],
-          ['54', 2],
+          ['46', 1, 2],
+          ['48', 4, 3],
+          ['50', 4, 4],
+          ['52', 2, 2],
+          ['54', 1, 1],
         ]),
       },
       {
@@ -611,11 +622,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#efece4',
         images: [IMG.shirtsFolded],
         sizes: ruGrid([
-          ['46', 6],
-          ['48', 12],
-          ['50', 12],
-          ['52', 8],
-          ['54', 4],
+          ['46', 3, 3],
+          ['48', 7, 5],
+          ['50', 5, 7],
+          ['52', 4, 4],
+          ['54', 2, 2],
         ]),
       },
     ],
@@ -646,11 +657,12 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#202020',
         images: [IMG.sneakerDark],
         sizes: shoeGrid([
-          [40, 0],
-          [41, 2],
-          [42, 4],
-          [43, 3],
-          [44, 0],
+          [40, 0, 0],
+          [41, 1, 1],
+          [42, 2, 2],
+          // Deliberately branch-1-only for this one row.
+          [43, 3, 0],
+          [44, 0, 0],
         ]),
       },
       {
@@ -658,11 +670,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#c8a06c',
         images: [IMG.sneakerTan],
         sizes: shoeGrid([
-          [40, 1],
-          [41, 3],
-          [42, 5],
-          [43, 2],
-          [44, 1],
+          [40, 0, 1],
+          [41, 2, 1],
+          [42, 3, 2],
+          [43, 1, 1],
+          [44, 1, 0],
         ]),
       },
     ],
@@ -690,7 +702,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         name: 'Серый',
         hex: '#55565c',
         images: [IMG.capGrey],
-        sizes: oneSize(8),
+        sizes: oneSize(3, 5),
       },
     ],
     brand: 'Без бренда',
@@ -716,11 +728,12 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#5a3b25',
         images: [IMG.bootsFlatlay],
         sizes: shoeGrid([
-          [40, 2],
-          [41, 4],
-          [42, 4],
-          [43, 3],
-          [44, 0],
+          [40, 1, 1],
+          [41, 2, 2],
+          [42, 2, 2],
+          // Deliberately branch-2-only for this one row.
+          [43, 0, 3],
+          [44, 0, 0],
         ]),
       },
     ],
@@ -749,11 +762,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#1f6f6f',
         images: [IMG.sneakerTeal],
         sizes: shoeGrid([
-          [40, 3],
-          [41, 5],
-          [42, 6],
-          [43, 3],
-          [44, 1],
+          [40, 1, 2],
+          [41, 3, 2],
+          [42, 3, 3],
+          [43, 1, 2],
+          [44, 0, 1],
         ]),
       },
       {
@@ -761,11 +774,11 @@ export const SEED_PRODUCTS: SeedProduct[] = [
         hex: '#e8e3da',
         images: [IMG.sneakerWhiteOrange],
         sizes: shoeGrid([
-          [40, 2],
-          [41, 4],
-          [42, 5],
-          [43, 2],
-          [44, 0],
+          [40, 1, 1],
+          [41, 2, 2],
+          [42, 3, 2],
+          [43, 1, 1],
+          [44, 0, 0],
         ]),
       },
     ],
@@ -785,18 +798,12 @@ export const SEED_PRODUCTS: SeedProduct[] = [
 
 export const DEFAULT_STORE_SETTINGS = {
   storeName: 'GARDEROB MEN',
-  address: 'г. Усть-Каменогорск, ул. Протозанова, 123 (демо-адрес — обновите в Настройках)',
-  workingHours: [
-    { days: 'Пн–Сб', hours: '10:00–20:00' },
-    { days: 'Вс', hours: '11:00–18:00' },
-  ],
   whatsappPhone: '+77012345678',
   phoneDisplay: '+7 (701) 234-56-78',
   kaspiPayLink: '',
   legalName: '',
   businessId: '',
   instagramUrl: 'https://www.instagram.com/garderob.men',
-  twoGisUrl: 'https://go.2gis.com/ev4n5',
   heroTitle: 'GARDEROB MEN',
   heroSubtitle: 'Мужской гардероб для города. Новая коллекция — верхняя одежда, трикотаж и обувь.',
   heroImage: IMG.quiltedJacketModel,
@@ -806,4 +813,30 @@ export const DEFAULT_STORE_SETTINGS = {
 export const DEFAULT_PROMO_CODES = [
   { code: 'GARDEROB10', discountPercent: 10, active: true },
   { code: 'WELCOME15', discountPercent: 15, active: true },
+];
+
+// The store's two physical pickup shops — same "demo placeholder, update in Settings"
+// convention as the old single-address DEFAULT_STORE_SETTINGS.address used to follow.
+export const DEFAULT_BRANCHES = [
+  {
+    name: 'Магазин на Протозанова',
+    address: 'г. Усть-Каменогорск, ул. Протозанова, 123 (демо-адрес — обновите в Настройках)',
+    workingHours: [
+      { days: 'Пн–Сб', hours: '10:00–20:00' },
+      { days: 'Вс', hours: '11:00–18:00' },
+    ],
+    phone: '+7 (701) 234-56-78',
+    twoGisUrl: 'https://go.2gis.com/ev4n5',
+    mapLat: null as number | null,
+    mapLng: null as number | null,
+  },
+  {
+    name: 'Магазин в ТРЦ (демо — обновите в Настройках)',
+    address: 'г. Усть-Каменогорск, пр. Независимости, 45, ТРЦ «Аман» (демо-адрес — обновите в Настройках)',
+    workingHours: [{ days: 'Пн–Вс', hours: '10:00–21:00' }],
+    phone: '+7 (701) 234-56-79',
+    twoGisUrl: '',
+    mapLat: null as number | null,
+    mapLng: null as number | null,
+  },
 ];

@@ -4,11 +4,13 @@ import cors from 'cors';
 import express from 'express';
 import { requireAdmin } from './middleware/requireAdmin';
 import { adminAuthRouter } from './routes/adminAuth';
+import { adminBranchesRouter } from './routes/adminBranches';
 import { adminMiscRouter } from './routes/adminMisc';
 import { adminOrdersRouter } from './routes/adminOrders';
 import { adminProductsRouter } from './routes/adminProducts';
 import { adminPromoCodesRouter } from './routes/adminPromoCodes';
 import { adminSettingsRouter } from './routes/adminSettings';
+import { publicBranchesRouter } from './routes/branches';
 import { customerRouter } from './routes/customer';
 import { publicRouter } from './routes/public';
 
@@ -21,11 +23,13 @@ const uploadsDir = path.resolve(process.cwd(), process.env.UPLOADS_DIR ?? './upl
 app.use('/uploads', express.static(uploadsDir));
 
 app.use('/api', publicRouter);
+app.use('/api/branches', publicBranchesRouter);
 app.use('/api/admin', adminAuthRouter);
 app.use('/api/admin/products', requireAdmin, adminProductsRouter);
 app.use('/api/admin/orders', requireAdmin, adminOrdersRouter);
 app.use('/api/admin/settings', requireAdmin, adminSettingsRouter);
 app.use('/api/admin/promo-codes', requireAdmin, adminPromoCodesRouter);
+app.use('/api/admin/branches', requireAdmin, adminBranchesRouter);
 app.use('/api/admin', requireAdmin, adminMiscRouter);
 app.use('/api/customer', customerRouter);
 

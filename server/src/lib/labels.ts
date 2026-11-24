@@ -37,12 +37,11 @@ export const LABEL_TO_DELIVERY: Record<string, DeliveryMethod> = Object.fromEntr
   Object.entries(DELIVERY_TO_LABEL).map(([enumVal, label]) => [label, enumVal as DeliveryMethod])
 );
 
+// Payment method is no longer a customer choice (see orderLifecycle.createOrder) —
+// only the enum -> label direction is needed, for display in the admin panel / order
+// confirmation. There's no LABEL_TO_PAYMENT reverse map because nothing parses a
+// payment label from client input anymore.
 export const PAYMENT_TO_LABEL: Record<PaymentMethod, string> = {
-  KASPI_QR: 'Kaspi QR',
-  TRANSFER: 'Перевод',
-  CASH: 'Наличными при получении',
+  CASH_ON_PICKUP: 'Оплата при получении',
+  CARD_ONLINE: 'Банковская карта (онлайн)',
 };
-
-export const LABEL_TO_PAYMENT: Record<string, PaymentMethod> = Object.fromEntries(
-  Object.entries(PAYMENT_TO_LABEL).map(([enumVal, label]) => [label, enumVal as PaymentMethod])
-);

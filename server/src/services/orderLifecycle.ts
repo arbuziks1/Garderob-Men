@@ -1,6 +1,6 @@
-import type { Order, OrderStatus } from '@prisma/client';
+import type { Order, OrderStatus, PaymentMethod } from '@prisma/client';
 import { prisma } from '../lib/prisma';
-import { LABEL_TO_DELIVERY, LABEL_TO_PAYMENT } from '../lib/labels';
+import { LABEL_TO_DELIVERY } from '../lib/labels';
 import { getFiscalProvider } from './fiscal';
 
 export class InsufficientStockError extends Error {
@@ -23,7 +23,8 @@ export interface CreateOrderInput {
   customerName: string;
   phone: string;
   delivery: string; // Russian label, as sent by the frontend
-  payment: string; // Russian label, as sent by the frontend
+  // Payment method is never client-supplied — see createOrder, which derives it from
+  // deliveryMethod. Never trust the client on something that changes business logic.
   items: CreateOrderItemInput[];
   subtotal: number;
   discount: number;
@@ -32,29 +33,47 @@ export interface CreateOrderInput {
   comment?: string;
   consentGiven: boolean;
   deliveryAddress?: { city: string; street: string; house: string; apartment?: string; entrance?: string; comment?: string };
+  // Required in practice for SELF_PICKUP (validated below), ignored for DELIVERY —
+  // a DELIVERY order auto-picks whichever branch has stock, in PickupBranch.position order.
+  pickupBranchId?: string;
 }
 
 /**
  * Creates an order and atomically decrements stock for every line item.
  *
- * Race-safety: each line item's stock decrement is a single SQL
- * `UPDATE ... SET stock_x = stock_x - :qty WHERE id = :colorId AND stock_x >= :qty`
+ * Race-safety: every line item's stock decrement is a single SQL
+ * `UPDATE ... SET stock = stock - :qty WHERE id = :branchStockId AND stock >= :qty`
  * (Prisma's `updateMany` with a `gte` condition compiles to exactly this). Postgres
  * takes a row lock for the duration of that UPDATE, so two concurrent requests for
- * the same ProductColor serialize: whichever commits first leaves the row with less
- * stock, and the second transaction's WHERE clause re-evaluates against that
+ * the same BranchStock row serialize: whichever commits first leaves the row with
+ * less stock, and the second transaction's WHERE clause re-evaluates against that
  * post-commit value — if it's no longer >= the requested quantity, `updateMany`
  * matches zero rows and we throw, rolling back the whole transaction. No explicit
  * `SELECT ... FOR UPDATE` is needed because the conditional UPDATE already behaves
  * as one; this is the standard "optimistic/conditional decrement" pattern and is
  * genuinely safe under concurrent load (verified with a concurrency test, see the
  * smoke test script).
+ *
+ * For SELF_PICKUP, the branch is client-chosen and there's exactly one conditional
+ * `updateMany` per item, targeting that one BranchStock row — same shape as before.
+ * For DELIVERY, there's no client-chosen branch: each candidate branch (in
+ * PickupBranch.position order) gets its own conditional `updateMany`, tried in turn
+ * until one actually reports `count > 0`. A candidate is only ever accepted on that
+ * count, never on the plain read used to shortlist it, so the fallback loop inherits
+ * the exact same race-safety property — see the DELIVERY branch below for why this
+ * can't double-sell stock under concurrent requests.
  */
 export async function createOrder(input: CreateOrderInput): Promise<Order & { items: import('@prisma/client').OrderItem[] }> {
   const deliveryMethod = LABEL_TO_DELIVERY[input.delivery];
-  const paymentMethod = LABEL_TO_PAYMENT[input.payment];
   if (!deliveryMethod) throw new Error(`Unknown delivery method label: ${input.delivery}`);
-  if (!paymentMethod) throw new Error(`Unknown payment method label: ${input.payment}`);
+
+  // Payment method is derived from delivery method, never client-supplied — this closes
+  // a real gap where a client could previously claim any payment label it wanted.
+  const paymentMethod: PaymentMethod = deliveryMethod === 'SELF_PICKUP' ? 'CASH_ON_PICKUP' : 'CARD_ONLINE';
+
+  if (deliveryMethod === 'SELF_PICKUP' && !input.pickupBranchId) {
+    throw new Error('pickupBranchId is required for SELF_PICKUP orders');
+  }
 
   return prisma.$transaction(async (tx) => {
     // Load snapshot data (title/sku/color name/price) for the items we're about to
@@ -72,6 +91,17 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { it
     });
     const sizeStockById = new Map(sizeStocks.map((s) => [s.id, s]));
 
+    let pickupBranchNameSnapshot: string | undefined;
+    if (deliveryMethod === 'SELF_PICKUP') {
+      const branch = await tx.pickupBranch.findUnique({ where: { id: input.pickupBranchId! } });
+      if (!branch) throw new Error(`Unknown pickupBranchId: ${input.pickupBranchId}`);
+      pickupBranchNameSnapshot = branch.name;
+    }
+
+    // The specific BranchStock row each item's decrement actually landed on, in the
+    // same order as input.items — stored on the OrderItem below.
+    const branchStockIdByItem: string[] = [];
+
     for (const item of input.items) {
       const color = colorById.get(item.colorId);
       const sizeStock = sizeStockById.get(item.sizeStockId);
@@ -79,12 +109,57 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { it
         throw new InsufficientStockError({ ...item, requested: item.quantity });
       }
 
-      const result = await tx.productSizeStock.updateMany({
-        where: { id: item.sizeStockId, stock: { gte: item.quantity } },
-        data: { stock: { decrement: item.quantity } },
-      });
-      if (result.count === 0) {
-        throw new InsufficientStockError({ ...item, requested: item.quantity });
+      if (deliveryMethod === 'SELF_PICKUP') {
+        // The client chose the branch — verify a BranchStock row for this
+        // (sizeStockId, branchId) pair actually exists before trusting it (a missing
+        // row and "not enough stock" fold into the same error, same as today's pattern
+        // of not distinguishing "invalid id" from "insufficient stock"). The read here
+        // is only to get the row's id for the OrderItem; the updateMany's count below
+        // is what actually proves the decrement happened safely.
+        const branchStock = await tx.branchStock.findUnique({
+          where: { sizeStockId_branchId: { sizeStockId: item.sizeStockId, branchId: input.pickupBranchId! } },
+        });
+        if (!branchStock) {
+          throw new InsufficientStockError({ ...item, requested: item.quantity });
+        }
+
+        const result = await tx.branchStock.updateMany({
+          where: { sizeStockId: item.sizeStockId, branchId: input.pickupBranchId!, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        });
+        if (result.count === 0) {
+          throw new InsufficientStockError({ ...item, requested: item.quantity });
+        }
+        branchStockIdByItem.push(branchStock.id);
+      } else {
+        // DELIVERY: no client-chosen branch — try every branch that stocks this size,
+        // in PickupBranch.position order, and accept the first one whose conditional
+        // decrement actually succeeds (count > 0). If a candidate's updateMany comes
+        // back with count 0 (another request beat us to it between the read and the
+        // write), move on to the next candidate rather than assuming success from the
+        // initial read — this is what keeps the fallback loop race-safe.
+        const candidates = await tx.branchStock.findMany({
+          where: { sizeStockId: item.sizeStockId },
+          include: { branch: true },
+          orderBy: { branch: { position: 'asc' } },
+        });
+
+        let decrementedInto: string | undefined;
+        for (const candidate of candidates) {
+          if (candidate.stock < item.quantity) continue; // cheap pre-filter from the read; not what proves safety
+          const result = await tx.branchStock.updateMany({
+            where: { id: candidate.id, stock: { gte: item.quantity } },
+            data: { stock: { decrement: item.quantity } },
+          });
+          if (result.count > 0) {
+            decrementedInto = candidate.id;
+            break;
+          }
+        }
+        if (!decrementedInto) {
+          throw new InsufficientStockError({ ...item, requested: item.quantity });
+        }
+        branchStockIdByItem.push(decrementedInto);
       }
     }
 
@@ -100,15 +175,18 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { it
         total: input.total,
         comment: input.comment,
         deliveryAddress: input.deliveryAddress ?? undefined,
+        pickupBranchId: deliveryMethod === 'SELF_PICKUP' ? input.pickupBranchId : undefined,
+        pickupBranchNameSnapshot: deliveryMethod === 'SELF_PICKUP' ? pickupBranchNameSnapshot : undefined,
         consentGiven: input.consentGiven,
         consentGivenAt: input.consentGiven ? new Date() : null,
         status: 'PENDING_PAYMENT',
         items: {
-          create: input.items.map((item) => {
+          create: input.items.map((item, idx) => {
             const color = colorById.get(item.colorId)!;
             return {
               productId: item.productId,
               sizeStockId: item.sizeStockId,
+              branchStockId: branchStockIdByItem[idx],
               skuSnapshot: color.product.sku,
               titleSnapshot: color.product.title,
               colorNameSnapshot: color.name,
@@ -138,14 +216,14 @@ export async function transitionOrderStatus(orderId: string, nextStatus: OrderSt
     }
 
     if (nextStatus === 'CANCELLED') {
-      // Restore stock directly on the exact ProductSizeStock row the order decremented.
-      // If that row (or its color) was since deleted by the admin, sizeStockId is
+      // Restore stock directly on the exact BranchStock row the order decremented.
+      // If that row (or its branch) was since deleted by the admin, branchStockId is
       // already null (onDelete: SetNull) — intentionally skip restoring in that case
       // rather than guessing; an admin can adjust stock manually.
       for (const item of order.items) {
-        if (!item.sizeStockId) continue;
-        await tx.productSizeStock.update({
-          where: { id: item.sizeStockId },
+        if (!item.branchStockId) continue;
+        await tx.branchStock.update({
+          where: { id: item.branchStockId },
           data: { stock: { increment: item.quantity } },
         });
       }

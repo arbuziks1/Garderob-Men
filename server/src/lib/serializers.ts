@@ -1,4 +1,13 @@
-import type { Order, OrderItem, Product, ProductColor, ProductImage, ProductSizeStock } from '@prisma/client';
+import type {
+  BranchStock,
+  Order,
+  OrderItem,
+  PickupBranch,
+  Product,
+  ProductColor,
+  ProductImage,
+  ProductSizeStock,
+} from '@prisma/client';
 import {
   CATEGORY_TO_LABEL,
   DELIVERY_TO_LABEL,
@@ -6,7 +15,9 @@ import {
   PAYMENT_TO_LABEL,
 } from './labels';
 
-type ColorWithSizes = ProductColor & { images: ProductImage[]; sizes: ProductSizeStock[] };
+type BranchStockWithBranch = BranchStock & { branch: PickupBranch };
+type SizeStockWithBranches = ProductSizeStock & { branchStocks: BranchStockWithBranch[] };
+type ColorWithSizes = ProductColor & { images: ProductImage[]; sizes: SizeStockWithBranches[] };
 type ProductWithColors = Product & { colors: ColorWithSizes[] };
 
 export function serializeProduct(product: ProductWithColors) {
@@ -42,13 +53,24 @@ export function serializeProduct(product: ProductWithColors) {
         images: [...color.images].sort((a, b) => a.position - b.position).map((img) => img.url),
         sizes: [...color.sizes]
           .sort((a, b) => a.position - b.position)
-          .map((s) => ({
-            id: s.id,
-            sizeRu: s.sizeRu ?? undefined,
-            sizeEu: s.sizeEu ?? undefined,
-            sizeInt: s.sizeInt ?? undefined,
-            stock: s.stock,
-          })),
+          .map((s) => {
+            const branchStocks = [...s.branchStocks].sort((a, b) => a.branch.position - b.branch.position);
+            return {
+              id: s.id,
+              sizeRu: s.sizeRu ?? undefined,
+              sizeEu: s.sizeEu ?? undefined,
+              sizeInt: s.sizeInt ?? undefined,
+              // Summed across branches so everything that already reads a flat `stock`
+              // (out-of-stock filters, badges, the floating cart bar, etc.) keeps
+              // working unchanged on the frontend.
+              stock: branchStocks.reduce((sum, bs) => sum + bs.stock, 0),
+              branchStocks: branchStocks.map((bs) => ({
+                branchId: bs.branchId,
+                branchName: bs.branch.name,
+                stock: bs.stock,
+              })),
+            };
+          }),
       })),
   };
 }
@@ -87,6 +109,8 @@ export function serializeOrderFull(order: OrderWithItems) {
     status: order.status,
     comment: order.comment ?? undefined,
     deliveryAddress: (order.deliveryAddress as Record<string, string> | null) ?? undefined,
+    // Only set for SELF_PICKUP orders — null for DELIVERY, see createOrder.
+    pickupBranchName: order.pickupBranchNameSnapshot ?? undefined,
     consentGiven: order.consentGiven,
     consentGivenAt: order.consentGivenAt?.toISOString(),
     paymentTransactionId: order.paymentTransactionId ?? undefined,
