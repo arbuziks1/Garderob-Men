@@ -120,8 +120,10 @@ export function serializeOrderFull(order: OrderWithItems) {
 }
 
 /** Minimal shape for the public order-status page (/order/:id) — deliberately omits
- *  customerName/phone/comment so a guessed or shared order id can't leak another
- *  customer's personal data. */
+ *  customerName/phone/comment/deliveryAddress so a guessed or shared order id can't
+ *  leak another customer's personal data. `payment` and `pickupBranchName` are not
+ *  personal data (just "how will this be paid" / "which shop"), and the page needs
+ *  them to decide whether to show a pay-online link or a pay-at-pickup note. */
 export function serializeOrderPublic(order: OrderWithItems) {
   return {
     id: order.id,
@@ -129,5 +131,7 @@ export function serializeOrderPublic(order: OrderWithItems) {
     status: order.status,
     total: order.total,
     items: serializeItems(order.items),
+    payment: PAYMENT_TO_LABEL[order.paymentMethod],
+    pickupBranchName: order.pickupBranchNameSnapshot ?? undefined,
   };
 }
