@@ -5,7 +5,13 @@ import { CATEGORIES, FITS, SIZE_FIT_LABEL, SIZE_FITS } from '../../types';
 import { BRAND_OPTIONS, COUNTRY_OPTIONS, MATERIAL_OPTIONS } from '../../data/productOptions';
 import { CATEGORY_CHARACTERISTIC_FIELDS, COMMON_CHARACTERISTIC_FIELDS, SEASON_OPTIONS } from '../../data/categoryCharacteristics';
 import { CATEGORY_MEASUREMENT_ROWS } from '../../data/measurements';
-import { distinctSizeLabels, INT_TO_RU_EU, RU_EU_TO_INT, SIZE_GRID_PRESETS } from '../../data/sizeGrids';
+import {
+  CATEGORY_DEFAULT_PRESET,
+  distinctSizeLabels,
+  INT_TO_RU_EU,
+  RU_EU_TO_INT,
+  SIZE_GRID_PRESETS,
+} from '../../data/sizeGrids';
 import { useBranches } from '../../hooks/useStore';
 import { api } from '../../services/api';
 import ImageField from './ImageField';
@@ -756,7 +762,7 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
 
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-graphite-500">Размеры и остатки</p>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex flex-col items-end gap-1">
                         <select
                           defaultValue=""
                           onChange={(e) => {
@@ -771,9 +777,13 @@ export default function ProductForm({ product, onClose, onSaved }: ProductFormPr
                           {SIZE_GRID_PRESETS.map((p) => (
                             <option key={p.label} value={p.label}>
                               {p.label}
+                              {p.label === CATEGORY_DEFAULT_PRESET[form.category] ? ' — рекомендуется' : ''}
                             </option>
                           ))}
                         </select>
+                        <p className="text-[10px] text-graphite-400">
+                          Рекомендуется для «{form.category}»: {CATEGORY_DEFAULT_PRESET[form.category]}
+                        </p>
                       </div>
                     </div>
 

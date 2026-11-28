@@ -31,6 +31,13 @@ const IMG = {
   sneakerWhiteOrange: unsplash('photo-1600185365926-3a2ce3cdb9eb'),
   capGrey: unsplash('photo-1521369909029-2afed882baee'),
   bootsFlatlay: unsplash('photo-1614676471928-2ed0ad1061a4'),
+  coatWool: unsplash('photo-1539533018447-63fcce2678e3'),
+  cardiganKnit: unsplash('photo-1631541909061-71e349d1f203'),
+  poloFolded: unsplash('photo-1586363104862-3a5e2ab60d99'),
+  shortsDenim: unsplash('photo-1591195853828-11db59a44f6b'),
+  beltLeather: unsplash('photo-1624222247344-550fb60583dc'),
+  backpackBlack: unsplash('photo-1553062407-98eeb64c6a62'),
+  backpackCanvas: unsplash('photo-1577733966973-d680bffd2e80'),
 };
 
 interface SeedSizeStock {
@@ -112,7 +119,7 @@ function oneSize(b1: number, b2: number): SeedSizeStock[] {
 export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Кожаная куртка косуха',
-    category: 'Верхняя одежда',
+    category: 'Куртки и пуховики',
     fit: 'Slim',
     sizeFit: 'SMALL_FIT',
     price: 89900,
@@ -161,7 +168,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Джинсовая куртка классическая',
-    category: 'Верхняя одежда',
+    category: 'Куртки и пуховики',
     fit: 'Regular',
     sizeFit: 'TRUE_TO_SIZE',
     price: 42900,
@@ -200,7 +207,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Бомбер стёганый',
-    category: 'Верхняя одежда',
+    category: 'Куртки и пуховики',
     fit: 'Oversize',
     sizeFit: 'BIG_FIT',
     price: 36900,
@@ -253,7 +260,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Худи оверсайз базовое',
-    category: 'Худи и свитшоты',
+    category: 'Худи и толстовки',
     fit: 'Oversize',
     sizeFit: 'BIG_FIT',
     price: 24900,
@@ -300,7 +307,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Свитшот базовый',
-    category: 'Худи и свитшоты',
+    category: 'Свитшоты и джемперы',
     fit: 'Regular',
     sizeFit: 'TRUE_TO_SIZE',
     price: 22900,
@@ -338,7 +345,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Свитшот оверсайз с принтом',
-    category: 'Худи и свитшоты',
+    category: 'Свитшоты и джемперы',
     fit: 'Oversize',
     sizeFit: 'BIG_FIT',
     price: 19900,
@@ -390,7 +397,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Джинсы зауженные',
-    category: 'Брюки и джинсы',
+    category: 'Джинсы',
     fit: 'Slim',
     sizeFit: 'SMALL_FIT',
     price: 27900,
@@ -434,7 +441,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Чиносы Slim',
-    category: 'Брюки и джинсы',
+    category: 'Брюки',
     fit: 'Slim',
     sizeFit: 'TRUE_TO_SIZE',
     price: 25900,
@@ -470,7 +477,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Джинсы прямого кроя',
-    category: 'Брюки и джинсы',
+    category: 'Джинсы',
     fit: 'Regular',
     sizeFit: 'TRUE_TO_SIZE',
     price: 29900,
@@ -506,7 +513,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Костюм-тройка в клетку',
-    category: 'Костюмы и рубашки',
+    category: 'Пиджаки и костюмы',
     fit: 'Slim',
     sizeFit: 'SMALL_FIT',
     price: 149900,
@@ -547,7 +554,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Костюм классический',
-    category: 'Костюмы и рубашки',
+    category: 'Пиджаки и костюмы',
     fit: 'Slim',
     sizeFit: 'SMALL_FIT',
     price: 134900,
@@ -585,7 +592,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Рубашка классическая',
-    category: 'Костюмы и рубашки',
+    category: 'Рубашки',
     fit: 'Regular',
     sizeFit: 'TRUE_TO_SIZE',
     price: 18900,
@@ -646,7 +653,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Кроссовки повседневные',
-    category: 'Обувь и аксессуары',
+    category: 'Обувь',
     fit: 'Regular',
     sizeFit: 'TRUE_TO_SIZE',
     price: 54900,
@@ -692,7 +699,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Кепка бейсболка',
-    category: 'Обувь и аксессуары',
+    category: 'Головные уборы и шарфы',
     fit: 'Regular',
     sizeFit: 'TRUE_TO_SIZE',
     price: 9900,
@@ -717,7 +724,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Ботинки замшевые Челси',
-    category: 'Обувь и аксессуары',
+    category: 'Обувь',
     fit: 'Regular',
     sizeFit: 'SMALL_FIT',
     price: 47900,
@@ -751,7 +758,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     title: 'Кроссовки street',
-    category: 'Обувь и аксессуары',
+    category: 'Обувь',
     fit: 'Oversize',
     sizeFit: 'BIG_FIT',
     price: 44900,
@@ -791,6 +798,240 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       'Материал подошвы': 'ЭВА, амортизирующая',
       Застёжка: 'Шнурки',
       'Высота подошвы': 'Высокая (4+ см)',
+      Уход: 'Протирать влажной тканью',
+    },
+  },
+  {
+    title: 'Пальто шерстяное классическое',
+    category: 'Пальто и плащи',
+    fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
+    price: 94900,
+    oldPrice: 119900,
+    description:
+      'Классическое пальто из шерстяной смеси прямого силуэта. Однобортная застёжка на пуговицах, подкладка из вискозы, боковые карманы с клапаном. Хорошо держит форму и подходит на межсезонье поверх костюма или свитера.',
+    modelNote: 'На модели размер L, рост 185 см',
+    colors: [
+      {
+        name: 'Верблюжий',
+        hex: '#b08b5a',
+        images: [IMG.coatWool],
+        sizes: ruGrid([
+          ['46', 1, 1],
+          ['48', 2, 3],
+          ['50', 3, 2],
+          ['52', 1, 2],
+          ['54', 0, 1],
+        ]),
+      },
+    ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Турция',
+    season: 'Демисезон',
+    material: 'Шерсть',
+    composition: '70% шерсть, 30% полиэстер, подкладка 100% вискоза',
+    characteristics: {
+      Силуэт: 'Прямой',
+      Застёжка: 'Однобортная, на пуговицах',
+      Подкладка: 'Полная подкладка',
+      Длина: 'Среднее (ниже колена)',
+      Карманы: '2, с клапаном',
+      Уход: 'Химчистка',
+    },
+  },
+  {
+    title: 'Кардиган вязаный на пуговицах',
+    category: 'Свитеры и кардиганы',
+    fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
+    price: 32900,
+    description:
+      'Вязаный кардиган из плотной пряжи с застёжкой на пуговицы и накладными карманами. Классическая крупная вязка, хорошо сочетается с рубашкой или футболкой.',
+    modelNote: 'На модели размер M, рост 180 см',
+    colors: [
+      {
+        name: 'Бежевый',
+        hex: '#cdbfa0',
+        images: [IMG.cardiganKnit],
+        sizes: ruGrid([
+          ['46', 1, 2],
+          ['48', 3, 4],
+          ['50', 4, 3],
+          ['52', 2, 2],
+          ['54', 0, 0],
+        ]),
+      },
+    ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Демисезон',
+    material: 'Акрил',
+    composition: '60% акрил, 40% шерсть',
+    characteristics: {
+      Силуэт: 'Прямой',
+      Застёжка: 'Пуговицы',
+      Воротник: 'V-образный вырез',
+      'Тип вязки/полотна': 'Крупная вязка',
+      Карманы: '2, накладные',
+      Уход: 'Ручная стирка 30°C',
+    },
+  },
+  {
+    title: 'Поло пике классическое',
+    category: 'Футболки и поло',
+    fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
+    price: 16900,
+    description:
+      'Поло из хлопкового пике с воротником на пуговицах. Плотное полотно держит форму, подходит и для офиса, и для повседневной носки.',
+    modelNote: 'На модели размер M, рост 179 см',
+    colors: [
+      {
+        name: 'Мятный',
+        hex: '#4f8f82',
+        images: [IMG.poloFolded],
+        sizes: intGrid([
+          ['S', 2, 3],
+          ['M', 5, 4],
+          ['L', 4, 5],
+          ['XL', 2, 2],
+          ['2XL', 0, 1],
+        ]),
+      },
+      {
+        name: 'Коралловый',
+        hex: '#e07856',
+        images: [IMG.poloFolded],
+        sizes: intGrid([
+          ['S', 1, 2],
+          ['M', 3, 3],
+          ['L', 3, 2],
+          ['XL', 1, 1],
+          ['2XL', 0, 0],
+        ]),
+      },
+    ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Весна-Лето',
+    material: 'Хлопок',
+    composition: '95% хлопок, 5% эластан',
+    characteristics: {
+      Силуэт: 'Прямой',
+      Воротник: 'На пуговицах',
+      Рукав: 'Короткий',
+      'Тип вязки/полотна': 'Пике',
+      Узор: 'Однотонная',
+      Уход: 'Машинная стирка 30°C',
+    },
+  },
+  {
+    title: 'Шорты джинсовые',
+    category: 'Шорты',
+    fit: 'Regular',
+    sizeFit: 'TRUE_TO_SIZE',
+    price: 15900,
+    description:
+      'Джинсовые шорты средней длины из плотного денима. Пять карманов, лёгкие потёртости, не требуют глажки.',
+    modelNote: 'На модели размер M, рост 180 см',
+    colors: [
+      {
+        name: 'Голубой',
+        hex: '#6f93b5',
+        images: [IMG.shortsDenim],
+        sizes: ruGrid([
+          ['46', 2, 2],
+          ['48', 4, 4],
+          ['50', 5, 3],
+          ['52', 2, 2],
+          // Deliberately branch-1-only for this one row.
+          ['54', 1, 0],
+        ]),
+      },
+    ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Узбекистан',
+    season: 'Весна-Лето',
+    material: 'Деним',
+    composition: '99% хлопок, 1% эластан',
+    characteristics: {
+      'Посадка на талии': 'Средняя',
+      'Длина шорт': 'Выше колена',
+      'Плотность денима': 'Средний (9-13 oz)',
+      'Тип застёжки': 'Молния и пуговица',
+      Уход: 'Машинная стирка 30°C наизнанку',
+    },
+  },
+  {
+    title: 'Ремень кожаный классический',
+    category: 'Ремни',
+    fit: 'Regular',
+    price: 12900,
+    description:
+      'Ремень из натуральной кожи с классической металлической пряжкой. Прошитые края, подходит под брюки и джинсы.',
+    colors: [
+      {
+        name: 'Коричневый',
+        hex: '#6b4327',
+        images: [IMG.beltLeather],
+        // Belt sizing is a plain cm length, not the RU/INT clothing grid — reuses
+        // intGrid's [sizeInt, b1, b2][] signature directly with cm strings.
+        sizes: intGrid([
+          ['105', 1, 0],
+          ['110', 2, 2],
+          ['115', 3, 2],
+          ['120', 1, 1],
+          // Deliberately branch-2-only for this one row.
+          ['125', 0, 1],
+        ]),
+      },
+    ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Турция',
+    season: 'Круглогодичный',
+    material: 'Натуральная кожа',
+    composition: '100% натуральная кожа',
+    characteristics: {
+      Пряжка: 'Металлическая, классическая',
+      Ширина: '3.5 см',
+      Узор: 'Гладкая',
+      Уход: 'Протирать сухой тканью',
+    },
+  },
+  {
+    title: 'Рюкзак городской',
+    category: 'Сумки и рюкзаки',
+    fit: 'Regular',
+    price: 24900,
+    oldPrice: 29900,
+    description:
+      'Городской рюкзак из плотной водоотталкивающей ткани с отделением под ноутбук 15". Регулируемые лямки, укреплённое дно, внешний карман на молнии.',
+    colors: [
+      {
+        name: 'Чёрный',
+        hex: '#1c1c1c',
+        images: [IMG.backpackBlack],
+        // Deliberately branch-1-only across the whole color — exercises the
+        // "only available at one branch" UI case for bags too.
+        sizes: oneSize(4, 0),
+      },
+      {
+        name: 'Хаки (вощёная парусина)',
+        hex: '#4a4f3a',
+        images: [IMG.backpackCanvas],
+        sizes: oneSize(2, 3),
+      },
+    ],
+    brand: 'Без бренда',
+    countryOfOrigin: 'Китай',
+    season: 'Круглогодичный',
+    material: 'Полиэстер',
+    composition: 'Верх 100% полиэстер; цвет хаки — вощёная парусина (хлопок с пропиткой)',
+    characteristics: {
+      'Отделение для ноутбука': 'До 15"',
+      Карманы: '3, включая внешний на молнии',
+      Застёжка: 'Молния',
+      Влагозащита: 'Водоотталкивающая пропитка',
       Уход: 'Протирать влажной тканью',
     },
   },

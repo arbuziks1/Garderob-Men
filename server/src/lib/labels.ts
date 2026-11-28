@@ -7,11 +7,21 @@ import type { Category, DeliveryMethod, Fit, PaymentMethod } from '@prisma/clien
 // do they become Postgres enums.
 
 export const CATEGORY_TO_LABEL: Record<Category, string> = {
-  VERKHNYAYA_ODEZHDA: 'Верхняя одежда',
-  HUDI_I_SVITSHOTY: 'Худи и свитшоты',
-  BRYUKI_I_DZHINSY: 'Брюки и джинсы',
-  KOSTYUMY_I_RUBASHKI: 'Костюмы и рубашки',
-  OBUV_I_AKSESSUARY: 'Обувь и аксессуары',
+  KURTKI_I_PUKHOVIKI: 'Куртки и пуховики',
+  PALTO_I_PLASHCHI: 'Пальто и плащи',
+  PIDZHAKI_I_KOSTYUMY: 'Пиджаки и костюмы',
+  HUDI_I_TOLSTOVKI: 'Худи и толстовки',
+  SVITSHOTY_I_DZHEMPERY: 'Свитшоты и джемперы',
+  SVITERY_I_KARDIGANY: 'Свитеры и кардиганы',
+  RUBASHKI: 'Рубашки',
+  FUTBOLKI_I_POLO: 'Футболки и поло',
+  BRYUKI: 'Брюки',
+  DZHINSY: 'Джинсы',
+  SHORTY: 'Шорты',
+  OBUV: 'Обувь',
+  REMNI: 'Ремни',
+  SUMKI_I_RYUKZAKI: 'Сумки и рюкзаки',
+  GOLOVNYE_UBORY_I_SHARFY: 'Головные уборы и шарфы',
 };
 
 export const LABEL_TO_CATEGORY: Record<string, Category> = Object.fromEntries(

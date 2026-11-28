@@ -1,3 +1,5 @@
+import type { Category } from '../types';
+
 // RU/EU are numerically identical for men's clothing in this store's sizing; INT is the
 // letter equivalent. Used only to auto-fill the other two fields in the admin form when
 // one is entered — never enforced, admin can always override.
@@ -122,11 +124,35 @@ export const SIZE_GRID_PRESETS: SizeGridPreset[] = [
     rows: [28, 30, 32, 34, 36, 38].map((w) => ({ sizeInt: `W${w}` })),
   },
   {
-    label: 'Обувь EU 38–46',
-    rows: Array.from({ length: 9 }, (_, i) => String(38 + i)).map((n) => ({ sizeEu: n })),
+    label: 'Обувь EU 39–45',
+    rows: Array.from({ length: 7 }, (_, i) => String(39 + i)).map((n) => ({ sizeEu: n })),
   },
   {
     label: 'Единый размер',
     rows: [{ sizeInt: 'One Size' }],
   },
+  {
+    label: 'Ремни 105–125 см',
+    rows: ['105', '110', '115', '120', '125'].map((n) => ({ sizeInt: n })),
+  },
 ];
+
+/** The size-grid preset that makes sense as the default for each category, so the admin
+ *  form can pre-select/recommend it instead of leaving the admin to search a flat list. */
+export const CATEGORY_DEFAULT_PRESET: Record<Category, string> = {
+  'Куртки и пуховики': 'Верх / Костюмы RU 44–58',
+  'Пальто и плащи': 'Верх / Костюмы RU 44–58',
+  'Пиджаки и костюмы': 'Верх / Костюмы RU 44–58',
+  'Худи и толстовки': 'Верх / Костюмы RU 44–58',
+  'Свитшоты и джемперы': 'Верх / Костюмы RU 44–58',
+  'Свитеры и кардиганы': 'Верх / Костюмы RU 44–58',
+  'Рубашки': 'Верх / Костюмы RU 44–58',
+  'Футболки и поло': 'Верх / Костюмы RU 44–58',
+  'Брюки': 'Верх / Костюмы RU 44–58',
+  'Джинсы': 'Джинсы / Брюки W28–W38',
+  'Шорты': 'Верх / Костюмы RU 44–58',
+  'Обувь': 'Обувь EU 39–45',
+  'Ремни': 'Ремни 105–125 см',
+  'Сумки и рюкзаки': 'Единый размер',
+  'Головные уборы и шарфы': 'Единый размер',
+};

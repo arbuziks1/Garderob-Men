@@ -1,29 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AtSign, Heart, MapPin, Menu, MessageCircle, Search, ShoppingBag, User, X } from 'lucide-react';
-import type { Category } from '../../types';
-import { CATEGORIES } from '../../types';
+import { AtSign, ChevronDown, Heart, MapPin, Menu, MessageCircle, Search, ShoppingBag, User, X } from 'lucide-react';
+import type { Category, Product } from '../../types';
+import { CATEGORY_GROUPS } from '../../types';
 import type { StoreSettings } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
-import { useHorizontalScroll } from '../../hooks/useHorizontalScroll';
 import { useSearchHistory } from '../../hooks/useSearchHistory';
 import { useBranches } from '../../hooks/useStore';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 
 interface HeaderProps {
   settings: StoreSettings;
+  products: Product[];
   activeCategory: Category | 'Все' | null;
   onCategoryChange: (category: Category | 'Все' | null) => void;
+  onSaleClick: () => void;
   search: string;
   onSearchChange: (value: string) => void;
 }
 
 export default function Header({
   settings,
+  products,
   activeCategory,
   onCategoryChange,
+  onSaleClick,
   search,
   onSearchChange,
 }: HeaderProps) {
@@ -34,9 +37,32 @@ export default function Header({
   const [branches] = useBranches();
   const twoGisUrl = branches[0]?.twoGisUrl ?? null;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [catalogMenuOpen, setCatalogMenuOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const categoryNavRef = useHorizontalScroll<HTMLElement>();
+  const catalogMenuRef = useRef<HTMLDivElement>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Partial<Record<Category, number>> = {};
+    for (const p of products) counts[p.category] = (counts[p.category] ?? 0) + 1;
+    return counts;
+  }, [products]);
+
+  useEffect(() => {
+    if (!catalogMenuOpen) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      if (catalogMenuRef.current && !catalogMenuRef.current.contains(e.target as Node)) {
+        setCatalogMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, [catalogMenuOpen]);
+
+  const selectCategory = (cat: Category) => {
+    onCategoryChange(cat);
+    setCatalogMenuOpen(false);
+  };
 
   // Record the query in "Вы недавно искали" once the person pauses typing, rather than on
   // every keystroke (which would fill the recent list with partial strings).
@@ -67,10 +93,7 @@ export default function Header({
           <span className="font-semibold">GARDEROB</span> <span className="font-normal text-stone-300">MEN</span>
         </a>
 
-        <nav
-          ref={categoryNavRef}
-          className="no-scrollbar ml-6 hidden min-w-0 flex-1 cursor-grab items-center gap-4 overflow-x-auto xl:gap-6 lg:flex"
-        >
+        <nav className="ml-6 hidden min-w-0 flex-1 items-center gap-5 lg:flex">
           <button
             onClick={() => onCategoryChange('Все')}
             className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.06em] transition-colors ${
@@ -81,19 +104,57 @@ export default function Header({
           >
             Все товары
           </button>
-          {CATEGORIES.map((cat) => (
+
+          <div ref={catalogMenuRef} className="relative">
             <button
-              key={cat}
-              onClick={() => onCategoryChange(cat)}
-              className={`whitespace-nowrap border-b py-1.5 text-xs font-medium uppercase tracking-[0.06em] transition-colors ${
-                activeCategory === cat
-                  ? 'border-paper text-paper'
-                  : 'border-transparent text-stone-400 hover:text-stone-100'
-              }`}
+              onClick={() => setCatalogMenuOpen((v) => !v)}
+              className="flex items-center gap-1 whitespace-nowrap border-b border-transparent py-1.5 text-xs font-medium uppercase tracking-[0.06em] text-stone-400 transition-colors hover:text-stone-100"
             >
-              {cat}
+              Каталог
+              <ChevronDown size={13} className={`transition-transform ${catalogMenuOpen ? 'rotate-180' : ''}`} />
             </button>
-          ))}
+            <AnimatePresence>
+              {catalogMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-full z-50 mt-2 w-[640px] rounded-md border border-graphite-800 bg-graphite-900 p-5 text-left shadow-2xl"
+                >
+                  <div className="grid grid-cols-3 gap-6">
+                    {CATEGORY_GROUPS.map((group) => (
+                      <div key={group.title}>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-stone-500">
+                          {group.title}
+                        </p>
+                        <ul className="flex flex-col gap-1.5">
+                          {group.categories.map((cat) => (
+                            <li key={cat}>
+                              <button
+                                onClick={() => selectCategory(cat)}
+                                className="text-left text-sm text-stone-200 transition-colors hover:text-paper"
+                              >
+                                {cat}
+                                <span className="ml-1 text-stone-500">({categoryCounts[cat] ?? 0})</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <button
+            onClick={onSaleClick}
+            className="whitespace-nowrap border-b border-transparent py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-amber-400 transition-colors hover:text-amber-300"
+          >
+            Sale
+          </button>
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -247,19 +308,35 @@ export default function Header({
           >
             Все товары
           </button>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                onCategoryChange(cat);
-                setMobileMenuOpen(false);
-              }}
-              className={`border-l-2 px-3 py-2 text-left text-sm font-medium uppercase tracking-wide ${
-                activeCategory === cat ? 'border-paper text-paper' : 'border-transparent text-stone-300'
-              }`}
-            >
-              {cat}
-            </button>
+          <button
+            onClick={() => {
+              onSaleClick();
+              setMobileMenuOpen(false);
+            }}
+            className="border-l-2 border-transparent px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide text-amber-400"
+          >
+            Sale
+          </button>
+          {CATEGORY_GROUPS.map((group) => (
+            <div key={group.title} className="mt-2">
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-stone-500">
+                {group.title}
+              </p>
+              {group.categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    onCategoryChange(cat);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`block w-full border-l-2 px-3 py-2 text-left text-sm font-medium uppercase tracking-wide ${
+                    activeCategory === cat ? 'border-paper text-paper' : 'border-transparent text-stone-300'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           ))}
           <div className="mt-2 flex gap-3 border-t border-graphite-800 pt-3">
             <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-stone-300">
