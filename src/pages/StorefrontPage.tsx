@@ -151,6 +151,11 @@ export default function StorefrontPage() {
           search={search}
           onSearchChange={setSearch}
         />
+      </div>
+
+      <HeroBanner settings={settings} branches={branches} onShopClick={scrollToCatalog} />
+
+      <main ref={catalogRef} className="mx-auto w-full max-w-7xl flex-1 scroll-mt-20 px-4 py-8 sm:px-6">
         <CatalogToolbar
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
@@ -159,12 +164,7 @@ export default function StorefrontPage() {
           priceCeiling={priceCeiling}
           onOpenFilterDrawer={() => setFiltersOpen(true)}
         />
-      </div>
-
-      <HeroBanner settings={settings} branches={branches} onShopClick={scrollToCatalog} />
-
-      <main ref={catalogRef} className="mx-auto w-full max-w-7xl flex-1 scroll-mt-20 px-4 py-8 sm:px-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 mt-4 flex items-center justify-between gap-3">
           <p className="text-sm text-graphite-500">{filteredProducts.length} товаров</p>
           <select
             value={sortBy}
