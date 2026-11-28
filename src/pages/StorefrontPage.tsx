@@ -7,7 +7,7 @@ import { matchesFilterState } from '../utils/filterProducts';
 import { useBranches, useProducts, useSettings } from '../hooks/useStore';
 import Header from '../components/storefront/Header';
 import HeroBanner from '../components/storefront/HeroBanner';
-import CatalogToolbar, { type SortOption } from '../components/storefront/CatalogToolbar';
+import CatalogToolbar, { SORT_LABEL, SORT_OPTIONS, type SortOption } from '../components/storefront/CatalogToolbar';
 import FilterSheet from '../components/storefront/FilterSheet';
 import type { FilterState } from '../components/storefront/FilterControls';
 import ProductGrid from '../components/storefront/ProductGrid';
@@ -155,14 +155,8 @@ export default function StorefrontPage() {
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
           filters={filters}
-          onFiltersChange={setFilters}
           priceFloor={priceFloor}
           priceCeiling={priceCeiling}
-          availableSizes={availableSizes}
-          availableColors={availableColors}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          resultCount={filteredProducts.length}
           onOpenFilterDrawer={() => setFiltersOpen(true)}
         />
       </div>
@@ -170,6 +164,20 @@ export default function StorefrontPage() {
       <HeroBanner settings={settings} branches={branches} onShopClick={scrollToCatalog} />
 
       <main ref={catalogRef} className="mx-auto w-full max-w-7xl flex-1 scroll-mt-20 px-4 py-8 sm:px-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-sm text-graphite-500">{filteredProducts.length} товаров</p>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="rounded-sm border border-stone-300 px-2.5 py-1.5 text-xs font-medium uppercase tracking-wide text-graphite-800"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {SORT_LABEL[opt]}
+              </option>
+            ))}
+          </select>
+        </div>
         <ProductGrid products={filteredProducts} onSelect={setSelectedProduct} />
       </main>
 
