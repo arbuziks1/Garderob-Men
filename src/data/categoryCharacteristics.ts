@@ -56,7 +56,6 @@ export const CATEGORY_CHARACTERISTIC_FIELDS: Record<Category, CharacteristicFiel
     },
     { key: 'Капюшон', options: ['Несъёмный', 'Съёмный', 'Скрытый в воротнике', 'Без капюшона'] },
     { key: 'Влагозащита', options: ['Нет', 'Водоотталкивающая пропитка', 'Мембрана'] },
-    { key: 'Силуэт', options: ['Прямой', 'Приталенный', 'Oversize'] },
   ],
   'Пальто и плащи': [
     { key: 'Длина пальто', options: ['Короткое', 'Среднее', 'Длинное'] },
@@ -66,7 +65,6 @@ export const CATEGORY_CHARACTERISTIC_FIELDS: Record<Category, CharacteristicFiel
       options: ['Молния', 'Пуговицы', 'Кнопки', 'Крючки', 'На поясе', 'Без застёжки'],
     },
     { key: 'Влагозащита', options: ['Нет', 'Водоотталкивающая пропитка', 'Мембрана'] },
-    { key: 'Силуэт', options: ['Прямой', 'Приталенный', 'Oversize'] },
   ],
   'Пиджаки и костюмы': [
     { key: 'Крой', options: ['Slim Fit', 'Regular Fit', 'Classic Fit'] },
@@ -82,7 +80,6 @@ export const CATEGORY_CHARACTERISTIC_FIELDS: Record<Category, CharacteristicFiel
       options: ['Футер 3-нитка с начёсом', 'Футер петля', 'Тонкий трикотаж', 'Крупная вязка', 'Флис'],
     },
     { key: 'Горловина', options: ['Круглая', 'Водолазка', 'На молнии', 'С капюшоном'] },
-    { key: 'Силуэт', options: ['Прямой', 'Приталенный', 'Oversize'] },
   ],
   'Свитшоты и джемперы': [
     {
@@ -90,13 +87,11 @@ export const CATEGORY_CHARACTERISTIC_FIELDS: Record<Category, CharacteristicFiel
       options: ['Футер 3-нитка с начёсом', 'Футер петля', 'Тонкий трикотаж', 'Крупная вязка', 'Флис'],
     },
     { key: 'Горловина', options: ['Круглая', 'Водолазка', 'На молнии', 'С капюшоном'] },
-    { key: 'Силуэт', options: ['Прямой', 'Приталенный', 'Oversize'] },
   ],
   'Свитеры и кардиганы': [
     { key: 'Тип вязки', options: ['Крупная вязка', 'Мелкая вязка'] },
     { key: 'Горловина', options: ['Круглая', 'V-образная', 'Водолазка'] },
     { key: 'Застёжка', options: ['На пуговицах', 'Без застёжки'] },
-    { key: 'Силуэт', options: ['Прямой', 'Приталенный', 'Oversize'] },
   ],
   'Рубашки': [
     { key: 'Тип воротника', options: ['Классический', 'Стойка', 'Баттен-даун', 'Круглый вырез'] },

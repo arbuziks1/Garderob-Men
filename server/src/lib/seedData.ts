@@ -120,7 +120,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Кожаная куртка косуха',
     category: 'Куртки и пуховики',
-    fit: 'Slim',
+    fit: 'До талии',
     sizeFit: 'SMALL_FIT',
     price: 89900,
     oldPrice: 109900,
@@ -147,7 +147,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Эко-кожа (искусственная)',
     composition: '100% эко-кожа, подкладка 100% полиэстер',
     characteristics: {
-      Силуэт: 'Прямой',
       Застёжка: 'Молния',
       Капюшон: 'Нет',
       Карманы: '4',
@@ -169,7 +168,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Джинсовая куртка классическая',
     category: 'Куртки и пуховики',
-    fit: 'Regular',
+    fit: 'До талии',
     sizeFit: 'TRUE_TO_SIZE',
     price: 42900,
     description:
@@ -196,7 +195,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Деним',
     composition: '100% хлопок (деним)',
     characteristics: {
-      Силуэт: 'Прямой',
       Застёжка: 'Кнопки',
       Карманы: '4',
       Утеплитель: 'Без утеплителя',
@@ -208,7 +206,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Бомбер стёганый',
     category: 'Куртки и пуховики',
-    fit: 'Oversize',
+    fit: 'До бедра',
     sizeFit: 'BIG_FIT',
     price: 36900,
     oldPrice: 44900,
@@ -249,7 +247,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Полиэстер',
     composition: 'Верх 100% полиэстер, утеплитель синтепон 100 г/м²',
     characteristics: {
-      Силуэт: 'Oversize',
       Застёжка: 'Молния',
       Утеплитель: 'Синтепон',
       Капюшон: 'Нет',
@@ -261,7 +258,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Худи оверсайз базовое',
     category: 'Худи и толстовки',
-    fit: 'Oversize',
+    fit: 'До бедра',
     sizeFit: 'BIG_FIT',
     price: 24900,
     description:
@@ -287,7 +284,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Хлопок',
     composition: '80% хлопок, 20% полиэстер',
     characteristics: {
-      Силуэт: 'Oversize',
       Капюшон: 'Есть, на кулиске',
       Рукав: 'Реглан',
       'Плотность, г/м²': '320',
@@ -308,7 +304,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Свитшот базовый',
     category: 'Свитшоты и джемперы',
-    fit: 'Regular',
+    fit: 'До талии',
     sizeFit: 'TRUE_TO_SIZE',
     price: 22900,
     description:
@@ -335,7 +331,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Хлопок',
     composition: '95% хлопок, 5% эластан',
     characteristics: {
-      Силуэт: 'Прямой',
       Капюшон: 'Нет',
       Рукав: 'Длинный',
       'Тип вязки/полотна': 'Футер петля (без начёса)',
@@ -346,7 +341,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Свитшот оверсайз с принтом',
     category: 'Свитшоты и джемперы',
-    fit: 'Oversize',
+    fit: 'До бедра',
     sizeFit: 'BIG_FIT',
     price: 19900,
     oldPrice: 26900,
@@ -387,7 +382,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Хлопок',
     composition: '80% хлопок, 20% полиэстер',
     characteristics: {
-      Силуэт: 'Oversize',
       'Плотность, г/м²': '320',
       Капюшон: 'Нет',
       'Тип вязки/полотна': 'Футер 3-нитка с начёсом',
@@ -398,7 +392,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Джинсы зауженные',
     category: 'Джинсы',
-    fit: 'Slim',
+    fit: 'До бедра',
     sizeFit: 'SMALL_FIT',
     price: 27900,
     description: 'Зауженные джинсы из плотного стрейч-денима. Средняя посадка, лёгкие потёртости, пять карманов.',
@@ -442,7 +436,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Чиносы Slim',
     category: 'Брюки',
-    fit: 'Slim',
+    fit: 'До бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 25900,
     description: 'Хлопковые чиносы зауженного кроя. Эластичный пояс, скрытые карманы, низ зафиксирован манжетой.',
@@ -478,7 +472,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Джинсы прямого кроя',
     category: 'Джинсы',
-    fit: 'Regular',
+    fit: 'До бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 29900,
     description: 'Джинсы прямого силуэта из плотного денима без эластана. Классическая посадка на талии, пять карманов.',
@@ -514,7 +508,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Костюм-тройка в клетку',
     category: 'Пиджаки и костюмы',
-    fit: 'Slim',
+    fit: 'До бедра',
     sizeFit: 'SMALL_FIT',
     price: 149900,
     oldPrice: 179900,
@@ -555,7 +549,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Костюм классический',
     category: 'Пиджаки и костюмы',
-    fit: 'Slim',
+    fit: 'До бедра',
     sizeFit: 'SMALL_FIT',
     price: 134900,
     description: 'Строгий классический костюм из смесовой шерсти. Приталенный крой, однобортный пиджак на две пуговицы.',
@@ -593,7 +587,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Рубашка классическая',
     category: 'Рубашки',
-    fit: 'Regular',
+    fit: 'До бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 18900,
     description:
@@ -654,7 +648,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Кроссовки повседневные',
     category: 'Обувь',
-    fit: 'Regular',
+    fit: 'До бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 54900,
     description: 'Кроссовки из комбинированных материалов на амортизирующей подошве. Подходят для ежедневной носки.',
@@ -700,7 +694,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Кепка бейсболка',
     category: 'Головные уборы и шарфы',
-    fit: 'Regular',
+    fit: 'До бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 9900,
     description: 'Бейсболка из плотного хлопка с вышитым логотипом и регулировкой по размеру.',
@@ -725,7 +719,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Ботинки замшевые Челси',
     category: 'Обувь',
-    fit: 'Regular',
+    fit: 'До бедра',
     sizeFit: 'SMALL_FIT',
     price: 47900,
     description: 'Ботинки Челси из натуральной замши на резинках, прошитая подошва.',
@@ -759,7 +753,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Кроссовки street',
     category: 'Обувь',
-    fit: 'Oversize',
+    fit: 'До бедра',
     sizeFit: 'BIG_FIT',
     price: 44900,
     description: 'Массивные кроссовки в стиле street wear на высокой подошве, комбинация текстиля и замши.',
@@ -804,7 +798,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Пальто шерстяное классическое',
     category: 'Пальто и плащи',
-    fit: 'Regular',
+    fit: 'Ниже бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 94900,
     oldPrice: 119900,
@@ -831,7 +825,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Шерсть',
     composition: '70% шерсть, 30% полиэстер, подкладка 100% вискоза',
     characteristics: {
-      Силуэт: 'Прямой',
       Застёжка: 'Однобортная, на пуговицах',
       Подкладка: 'Полная подкладка',
       Длина: 'Среднее (ниже колена)',
@@ -842,7 +835,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Кардиган вязаный на пуговицах',
     category: 'Свитеры и кардиганы',
-    fit: 'Regular',
+    fit: 'До бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 32900,
     description:
@@ -868,7 +861,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Акрил',
     composition: '60% акрил, 40% шерсть',
     characteristics: {
-      Силуэт: 'Прямой',
       Застёжка: 'Пуговицы',
       Воротник: 'V-образный вырез',
       'Тип вязки/полотна': 'Крупная вязка',
@@ -879,7 +871,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Поло пике классическое',
     category: 'Футболки и поло',
-    fit: 'Regular',
+    fit: 'До талии',
     sizeFit: 'TRUE_TO_SIZE',
     price: 16900,
     description:
@@ -917,7 +909,6 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     material: 'Хлопок',
     composition: '95% хлопок, 5% эластан',
     characteristics: {
-      Силуэт: 'Прямой',
       Воротник: 'На пуговицах',
       Рукав: 'Короткий',
       'Тип вязки/полотна': 'Пике',
@@ -928,7 +919,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Шорты джинсовые',
     category: 'Шорты',
-    fit: 'Regular',
+    fit: 'До бедра',
     sizeFit: 'TRUE_TO_SIZE',
     price: 15900,
     description:
@@ -965,7 +956,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Ремень кожаный классический',
     category: 'Ремни',
-    fit: 'Regular',
+    fit: 'До бедра',
     price: 12900,
     description:
       'Ремень из натуральной кожи с классической металлической пряжкой. Прошитые края, подходит под брюки и джинсы.',
@@ -1001,7 +992,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     title: 'Рюкзак городской',
     category: 'Сумки и рюкзаки',
-    fit: 'Regular',
+    fit: 'До бедра',
     price: 24900,
     oldPrice: 29900,
     description:

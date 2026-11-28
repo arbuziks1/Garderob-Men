@@ -15,7 +15,7 @@ export type Category =
   | 'Сумки и рюкзаки'
   | 'Головные уборы и шарфы';
 
-export type Fit = 'Oversize' | 'Regular' | 'Slim';
+export type Fit = 'До талии' | 'До бедра' | 'Ниже бедра';
 
 export type SizeFit = 'SMALL_FIT' | 'TRUE_TO_SIZE' | 'BIG_FIT';
 
@@ -27,7 +27,7 @@ export const SIZE_FIT_LABEL: Record<SizeFit, string> = {
 
 export const SIZE_FITS: SizeFit[] = ['SMALL_FIT', 'TRUE_TO_SIZE', 'BIG_FIT'];
 
-export const FITS: Fit[] = ['Oversize', 'Regular', 'Slim'];
+export const FITS: Fit[] = ['До талии', 'До бедра', 'Ниже бедра'];
 export const CATEGORIES: Category[] = [
   'Куртки и пуховики',
   'Пальто и плащи',

@@ -29,9 +29,9 @@ export const LABEL_TO_CATEGORY: Record<string, Category> = Object.fromEntries(
 );
 
 export const FIT_TO_LABEL: Record<Fit, string> = {
-  OVERSIZE: 'Oversize',
-  REGULAR: 'Regular',
-  SLIM: 'Slim',
+  TO_WAIST: 'До талии',
+  TO_HIP: 'До бедра',
+  BELOW_HIP: 'Ниже бедра',
 };
 
 export const LABEL_TO_FIT: Record<string, Fit> = Object.fromEntries(

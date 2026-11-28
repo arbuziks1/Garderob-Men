@@ -57,7 +57,7 @@ function emptyProduct(branches: PickupBranch[]): Product {
     sku: '',
     title: '',
     category: CATEGORIES[0],
-    fit: 'Regular',
+    fit: 'До бедра',
     price: 0,
     description: '',
     colors: [emptyColor(branches)],

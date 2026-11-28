@@ -26,9 +26,9 @@ enum Category {
 }
 
 enum Fit {
-  OVERSIZE
-  REGULAR
-  SLIM
+  TO_WAIST
+  TO_HIP
+  BELOW_HIP
 }
 
 enum DeliveryMethod {
@@ -50,9 +50,9 @@ enum OrderStatus {
 }
 
 enum SizeFit {
-  SMALL_FIT    // Маломерит
+  SMALL_FIT // Маломерит
   TRUE_TO_SIZE // Идёт размер в размер
-  BIG_FIT      // Большемерит
+  BIG_FIT // Большемерит
 }
 
 // Per-category sequential counter used to generate SKUs like GM-OUT-0014.
@@ -78,12 +78,12 @@ model Product {
   // Product-card attributes shown the way Kaspi Магазин shows them (researched from
   // live Kaspi listings — brand/country/season/composition are near-universal across
   // categories, everything else varies too much per category for its own column).
-  brand            String?
-  countryOfOrigin  String?
-  season           String?
-  material         String?
-  composition      String?
-  characteristics  Json? // free-form { "Силуэт": "Oversize", "Застёжка": "Молния", ... }
+  brand           String?
+  countryOfOrigin String?
+  season          String?
+  material        String?
+  composition     String?
+  characteristics Json? // free-form { "Застёжка": "Молния", "Утеплитель": "Синтепон", ... }
 
   // Compact per-size measurements table in cm, independent of per-color stock:
   // { rows: ["Длина изделия", ...], values: { "Длина изделия": { "48 (M)": 70, ... } } }.
@@ -132,7 +132,7 @@ model ProductSizeStock {
   sizeRu   String?
   sizeEu   String?
   sizeInt  String?
-  position Int    @default(0)
+  position Int     @default(0)
 
   // Stock is tracked per pickup branch, not as one flat number — see BranchStock.
   branchStocks BranchStock[]
@@ -148,7 +148,7 @@ model PickupBranch {
   id           String  @id @default(cuid())
   name         String
   address      String
-  workingHours Json    // same WorkingHours[] shape StoreSettings.workingHours used — [{days, hours}]
+  workingHours Json // same WorkingHours[] shape StoreSettings.workingHours used — [{days, hours}]
   phone        String
   twoGisUrl    String?
   mapLat       Float?
